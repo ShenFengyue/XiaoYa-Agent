@@ -1,168 +1,148 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>XiaoYa 心理聊天</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-stone-50 text-slate-800 antialiased flex items-center justify-center">
+from pathlib import Path
+import os
+import re
 
-    <!-- 主页面 -->
-    <div id="welcomePage" class="flex flex-col items-center justify-center space-y-8">
-        <h1 class="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-yellow-400 to-green-500 text-center">
-            小雅，帮你看见自己
-        </h1>
-        <button
-            id="startBtn"
-            class="rounded-full bg-slate-900 px-10 py-4 text-lg font-semibold text-white shadow-lg hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
-        >
-            点击开始
-        </button>
-    </div>
+from flask import Flask, Response, jsonify, render_template, request, stream_with_context
+from openai import OpenAI
 
-    <!-- 聊天页面 -->
-    <div id="chatPage" class="hidden w-full max-w-5xl px-6 py-16 md:py-24 space-y-10">
-        <section class="rounded-[2rem] border border-slate-200/70 bg-slate-50 shadow-sm backdrop-blur-sm">
-            <textarea
-                id="messageInput"
-                class="h-48 w-full resize-none rounded-[2rem] border-0 bg-transparent px-8 pt-8 text-lg leading-loose outline-none placeholder:text-slate-400"
-                placeholder="请输入具体片段或感受，例如：我和伴侣吵架时会突然特别冷，像什么都感觉不到。"
-            ></textarea>
+BASE_DIR = Path(__file__).resolve().parent
+app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
 
-            <div class="flex items-center justify-between border-t border-slate-200/70 px-8 py-5">
-                <span class="text-sm tracking-wide text-slate-400">一行一条信息</span>
-                <button
-                    id="sendBtn"
-                    class="rounded-full bg-slate-900 px-7 py-3 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    开始对话
-                </button>
-            </div>
-        </section>
+DEFAULT_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 
-        <section id="chatLogSection" class="rounded-[2rem] border border-slate-200/70 bg-white shadow-sm transition-all duration-500">
-            <div
-                id="chatLog"
-                class="min-h-[42rem] whitespace-pre-wrap px-10 py-10 text-[1.05rem] leading-9 text-slate-700 transition-opacity duration-300 overflow-y-auto"
-            ></div>
-        </section>
-    </div>
+SYSTEM_PROMPT = """
+You are XiaoYa, a calm and thoughtful Chinese-speaking psychological reflection guide.
 
-    <script>
-        const welcomePage = document.getElementById('welcomePage');
-        const chatPage = document.getElementById('chatPage');
-        const startBtn = document.getElementById('startBtn');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const chatLog = document.getElementById('chatLog');
+Your role:
+- Help users notice emotions, repeated interpersonal patterns, protective strategies, and possible defensive behaviors.
+- Explore possibilities gently instead of diagnosing or declaring facts.
+- Support self-awareness around childhood wounds, attachment patterns, shame, people-pleasing, perfectionism, avoidance, emotional numbing, over-control, rationalization, and anger as protection.
 
-        let conversation = [];
-        let isStreaming = false;
+Hard rules:
+- Do not present yourself as a doctor, therapist, or crisis service.
+- Do not diagnose mental disorders or claim certainty about trauma.
+- Frame observations as hypotheses using language like "也许", "可能", "一种保护方式是", "你可以留意".
+- Stay concise, warm, and grounded. Usually keep replies between 180 and 320 Chinese characters unless the user asks for depth.
+- Ask at most two reflection questions at a time.
+- Avoid long disclaimers unless risk is present.
 
-        // 切换到聊天页面
-        startBtn.addEventListener('click', () => {
-            welcomePage.classList.add('hidden');
-            chatPage.classList.remove('hidden');
-            messageInput.focus();
-        });
+Default response structure:
+1. Briefly reflect what you heard.
+2. Name one or two possible emotional needs, wounds, or defense patterns.
+3. Offer one small reflection exercise, journaling cue, or grounding step.
+4. End with one gentle question or invitation.
 
-        function scrollToBottom() {
-            chatLog.scrollTop = chatLog.scrollHeight;
-        }
+When the user is vague:
+- Ask focused questions about body sensations, repeated situations, inner self-talk, or what feels hardest to admit.
 
-        function createMessage(role, content, isTyping = false) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `mb-6 ${role === 'user' ? 'text-right' : 'text-left'}`;
-            const msg = document.createElement('div');
-            msg.className = `inline-block max-w-[80%] px-6 py-4 rounded-2xl ${role === 'user' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'} break-words`;
-            if (isTyping) {
-                msg.innerHTML = '<span class="animate-pulse">思考中...</span>';
-            } else {
-                msg.textContent = content;
-            }
-            wrapper.appendChild(msg);
-            chatLog.appendChild(wrapper);
-            scrollToBottom();
-            return { wrapper, msg };
-        }
+When the user is highly self-critical:
+- Reduce shame, validate the protective function of the pattern, and separate the person from the strategy.
 
-        async function sendMessage() {
-            if (isStreaming) return;
+When the user mentions risk:
+- If they mention wanting to hurt themselves or others, being unable to stay safe, or being in immediate danger, prioritize safety.
+- Tell them to contact local emergency services or a trusted person right now.
+- Ask whether they are safe in this moment.
+- Keep the reply short and practical.
+"""
 
-            const message = messageInput.value.trim();
-            if (!message) return;
+CRISIS_PATTERN = re.compile(
+    r"(自杀|轻生|不想活|结束生命|伤害自己|伤害他人|活不下去|想死|suicide|kill myself|hurt myself|self harm)",
+    re.IGNORECASE,
+)
 
-            conversation.push({ role: 'user', content: message });
-            createMessage('user', message);
-            messageInput.value = '';
-            scrollToBottom();
 
-            isStreaming = true;
-            sendBtn.disabled = true;
-            const typingMsg = createMessage('assistant', '', true);
+def get_client():
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing DEEPSEEK_API_KEY environment variable")
 
-            try {
-                const response = await fetch('/api/process', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: conversation })
-                });
+    return OpenAI(
+        api_key=api_key,
+        base_url=os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+    )
 
-                if (!response.ok) {
-                    let errorText = '请求失败';
-                    try {
-                        const errData = await response.json();
-                        errorText = errData.error || errorText;
-                    } catch {
-                        errorText = await response.text();
-                    }
-                    typingMsg.msg.textContent = errorText;
-                    return;
-                }
 
-                if (!response.body) {
-                    const text = await response.text();
-                    typingMsg.msg.textContent = text;
-                    conversation.push({ role: 'assistant', content: text });
-                    return;
-                }
+def normalize_messages(raw_messages):
+    messages = []
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let firstChunk = true;
-                let assistantText = '';
+    for item in raw_messages or []:
+        if not isinstance(item, dict):
+            continue
 
-                while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    if (firstChunk) {
-                        typingMsg.msg.textContent = '';
-                        firstChunk = false;
-                    }
-                    assistantText += decoder.decode(value, { stream: true });
-                    typingMsg.msg.textContent = assistantText;
-                    scrollToBottom();
-                }
-                assistantText += decoder.decode();
-                typingMsg.msg.textContent = assistantText;
-                conversation.push({ role: 'assistant', content: assistantText.trim() });
+        role = str(item.get("role", "")).strip().lower()
+        content = str(item.get("content", "")).strip()
 
-            } catch (err) {
-                typingMsg.msg.textContent = `请求失败: ${err.message}`;
-            } finally {
-                isStreaming = false;
-                sendBtn.disabled = false;
-            }
-        }
+        if role not in {"user", "assistant"} or not content:
+            continue
 
-        sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-    </script>
-</body>
-</html>
+        messages.append({"role": role, "content": content})
+
+    return messages[-16:]
+
+
+def build_messages(messages):
+    if not messages:
+        return None, []
+
+    latest_user_message = next(
+        (message["content"] for message in reversed(messages) if message["role"] == "user"),
+        "",
+    )
+    risk_detected = bool(CRISIS_PATTERN.search(latest_user_message))
+
+    system_prompt = SYSTEM_PROMPT
+    if risk_detected:
+        system_prompt += """
+
+Safety override:
+- Skip deep analysis for now.
+- Focus on immediate safety, contacting local emergency help, and involving a trusted human.
+- Ask one direct safety question.
+"""
+
+    chat_messages = [{"role": "system", "content": system_prompt}]
+    chat_messages.extend(messages)
+    return risk_detected, chat_messages
+
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+
+@app.route("/api/process", methods=["POST"])
+def process_messages():
+    data = request.get_json(silent=True) or {}
+    messages = normalize_messages(data.get("messages"))
+
+    if not messages:
+        return jsonify({"error": "Please provide at least one message"}), 400
+
+    _, chat_messages = build_messages(messages)
+
+    try:
+        client = get_client()
+
+        def generate():
+            stream = client.chat.completions.create(
+                model=DEFAULT_MODEL,
+                messages=chat_messages,
+                temperature=0.7,
+                stream=True,
+            )
+
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    yield delta
+
+        return Response(
+            stream_with_context(generate()),
+            mimetype="text/plain; charset=utf-8",
+        )
+
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+handler = app
