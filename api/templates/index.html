@@ -3,67 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XiaoYa 高级主页</title>
+<title>XiaoYa 高级粒子主页</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    body {
-        min-height: 100vh;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(135deg, #fdf6e3, #f0e6dc);
-        overflow: hidden;
-        font-family: "Noto Sans SC", sans-serif;
-    }
+body {
+    margin:0; min-height:100vh;
+    font-family:"Noto Sans SC", sans-serif;
+    overflow:hidden;
+    background: linear-gradient(135deg,#fdf6e3,#f0e6dc);
+    display:flex; justify-content:center; align-items:center;
+}
 
-    /* 背景浮动光晕 */
-    .bg-glow {
-        position: absolute;
-        width: 30rem;
-        height: 30rem;
-        border-radius: 50%;
-        filter: blur(140px);
-        opacity: 0.35;
-        animation: float 10s ease-in-out infinite alternate;
-        z-index: 0;
-    }
-    .bg-glow:nth-child(1) { top: -8rem; left: -6rem; background: #ff7c7c; }
-    .bg-glow:nth-child(2) { bottom: -8rem; right: -6rem; background: #7cf3ff; }
+/* 背景光晕 */
+.bg-glow {
+    position:absolute; width:30rem; height:30rem; border-radius:50%;
+    filter:blur(140px); opacity:0.35; animation: float 10s ease-in-out infinite alternate; z-index:0;
+}
+.bg-glow:nth-child(1){top:-8rem; left:-6rem; background:#ff7c7c;}
+.bg-glow:nth-child(2){bottom:-8rem; right:-6rem; background:#7cf3ff;}
+@keyframes float{0%{transform:translateY(0) translateX(0);}50%{transform:translateY(20px) translateX(20px);}100%{transform:translateY(0) translateX(0);}}
 
-    @keyframes float {
-        0% { transform: translateY(0) translateX(0); }
-        50% { transform: translateY(20px) translateX(20px); }
-        100% { transform: translateY(0) translateX(0); }
-    }
+/* 粒子 */
+.particle {
+    position:absolute; width:6px; height:6px; border-radius:50%; background:white;
+    opacity:0.3; animation: particleAnim linear infinite;
+}
+@keyframes particleAnim {
+    0%{transform: translateY(0) translateX(0); opacity:0.3;}
+    50%{opacity:0.6;}
+    100%{transform: translateY(-100vh) translateX(50px); opacity:0;}
+}
 
-    /* 渐显文字动画 */
-    .fade-in {
-        opacity: 0;
-        animation: fadeIn 2s forwards;
-    }
-    @keyframes fadeIn { to { opacity: 1; } }
+/* 渐显文字 */
+.fade-in { opacity:0; animation: fadeIn 2s forwards;}
+@keyframes fadeIn{to{opacity:1;}}
 
-    /* 高级按钮动画 */
-    .fancy-btn {
-        position: relative;
-        overflow: hidden;
-    }
-    .fancy-btn::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(60deg, #ff7c7c, #f9d423, #7cf3ff);
-        opacity: 0.4;
-        transform: rotate(45deg) translate(-100%, -100%);
-        transition: transform 0.5s ease;
-    }
-    .fancy-btn:hover::before {
-        transform: rotate(45deg) translate(0,0);
-    }
+/* 高级按钮 */
+.fancy-btn {
+    position: relative; overflow:hidden;
+}
+.fancy-btn::before {
+    content:'';
+    position:absolute; top:-50%; left:-50%;
+    width:200%; height:200%;
+    background: linear-gradient(60deg,#ff7c7c,#f9d423,#7cf3ff);
+    opacity:0.4;
+    transform: rotate(45deg) translate(-100%,-100%);
+    transition: transform 0.5s ease;
+}
+.fancy-btn:hover::before { transform: rotate(45deg) translate(0,0); }
+.fancy-btn:hover { transform: scale(1.05); transition:transform 0.3s; }
+.fade-out {animation: fadeOut 0.7s forwards;}
+@keyframes fadeOut{to{opacity:0; transform:translateY(-20px);}}
+.fade-in-page {animation: fadeInPage 0.7s forwards;}
+@keyframes fadeInPage{from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
 </style>
 </head>
 <body>
@@ -71,18 +64,30 @@
     <div class="bg-glow"></div>
     <div class="bg-glow"></div>
 
-    <!-- 主页面 -->
+    <!-- 粒子 -->
+    <script>
+        for(let i=0;i<50;i++){
+            const p = document.createElement('div');
+            p.className='particle';
+            p.style.left = Math.random()*100+'vw';
+            p.style.top = Math.random()*100+'vh';
+            p.style.animationDuration = (5+Math.random()*10)+'s';
+            document.body.appendChild(p);
+        }
+    </script>
+
+    <!-- 欢迎页 -->
     <div id="welcomePage" class="relative z-10 flex flex-col items-center justify-center space-y-12 text-center">
         <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-yellow-400 to-green-500 fade-in">
             小雅，帮你看见自己
         </h1>
-        <button id="startBtn" class="fancy-btn relative rounded-full px-12 py-4 text-lg font-bold text-white shadow-xl hover:scale-105 transition-transform">
+        <button id="startBtn" class="fancy-btn relative rounded-full px-12 py-4 text-lg font-bold text-white shadow-xl">
             点击开始
         </button>
     </div>
 
-    <!-- 聊天页面 -->
-    <div id="chatPage" class="hidden w-full max-w-5xl px-6 py-16 md:py-24 space-y-10">
+    <!-- 聊天页 -->
+    <div id="chatPage" class="hidden w-full max-w-5xl px-6 py-16 md:py-24 space-y-10 fade-in-page">
         <section class="rounded-[2rem] border border-slate-200/70 bg-slate-50 shadow-sm backdrop-blur-sm">
             <textarea
                 id="messageInput"
@@ -102,77 +107,19 @@
         </section>
     </div>
 
-    <script>
-        const welcomePage = document.getElementById('welcomePage');
-        const chatPage = document.getElementById('chatPage');
-        const startBtn = document.getElementById('startBtn');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const chatLog = document.getElementById('chatLog');
-
-        let conversation = [];
-        let isStreaming = false;
-
-        // 点击开始，淡入聊天页面
-        startBtn.addEventListener('click', () => {
+<script>
+    const welcomePage=document.getElementById('welcomePage');
+    const chatPage=document.getElementById('chatPage');
+    const startBtn=document.getElementById('startBtn');
+    startBtn.addEventListener('click',()=>{
+        welcomePage.classList.add('fade-out');
+        setTimeout(()=>{
             welcomePage.classList.add('hidden');
             chatPage.classList.remove('hidden');
-            messageInput.focus();
-        });
-
-        function scrollToBottom() { chatLog.scrollTop = chatLog.scrollHeight; }
-
-        function createMessage(role, content, isTyping=false) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `mb-6 ${role==='user'?'text-right':'text-left'}`;
-            const msg = document.createElement('div');
-            msg.className = `inline-block max-w-[80%] px-6 py-4 rounded-2xl ${role==='user'?'bg-slate-900 text-white':'bg-slate-100 text-slate-800'} break-words`;
-            msg.innerHTML = isTyping?'<span class="animate-pulse">思考中...</span>':content;
-            wrapper.appendChild(msg);
-            chatLog.appendChild(wrapper);
-            scrollToBottom();
-            return {wrapper,msg};
-        }
-
-        async function sendMessage() {
-            if (isStreaming) return;
-            const message = messageInput.value.trim();
-            if (!message) return;
-            conversation.push({role:'user',content:message});
-            createMessage('user', message);
-            messageInput.value=''; scrollToBottom();
-            isStreaming=true; sendBtn.disabled=true;
-            const typingMsg=createMessage('assistant','',true);
-            try {
-                const response=await fetch('/api/process',{
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify({messages:conversation})
-                });
-                if(!response.ok){
-                    let err='请求失败';
-                    try{const d=await response.json(); err=d.error||err;}catch{err=await response.text();}
-                    typingMsg.msg.textContent=err; return;
-                }
-                if(!response.body){
-                    const text=await response.text(); typingMsg.msg.textContent=text;
-                    conversation.push({role:'assistant',content:text}); return;
-                }
-                const reader=response.body.getReader(); const decoder=new TextDecoder('utf-8'); let firstChunk=true; let assistantText='';
-                while(true){
-                    const {value,done}=await reader.read(); if(done) break;
-                    if(firstChunk){typingMsg.msg.textContent='';firstChunk=false;}
-                    assistantText+=decoder.decode(value,{stream:true});
-                    typingMsg.msg.textContent=assistantText; scrollToBottom();
-                }
-                assistantText+=decoder.decode(); typingMsg.msg.textContent=assistantText;
-                conversation.push({role:'assistant',content:assistantText.trim()});
-            } catch(err){typingMsg.msg.textContent=`请求失败: ${err.message}`;}
-            finally{isStreaming=false;sendBtn.disabled=false;}
-        }
-
-        sendBtn.addEventListener('click',sendMessage);
-        messageInput.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
-    </script>
+            chatPage.classList.add('fade-in-page');
+            document.getElementById('messageInput').focus();
+        },700);
+    });
+</script>
 </body>
 </html>
