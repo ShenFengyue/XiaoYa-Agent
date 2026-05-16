@@ -1,86 +1,16 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XiaoYa 高级粒子主页</title>
 <title>XiaoYa</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body {
-    margin:0; min-height:100vh;
-    font-family:"Noto Sans SC", sans-serif;
-    overflow:hidden;
-    display:flex; justify-content:center; align-items:center;
-    background: linear-gradient(135deg, #e0c3fc, #8ec5fc); /* 淡紫到淡蓝渐变 */
-}
-
-/* 背景光晕 */
-.bg-glow {
-    position:absolute; width:30rem; height:30rem; border-radius:50%;
-    filter:blur(140px); opacity:0.35; animation: float 10s ease-in-out infinite alternate; z-index:0;
-}
-.bg-glow:nth-child(1){top:-8rem; left:-6rem; background:#cba6f7;}  /* 紫色光晕 */
-.bg-glow:nth-child(2){bottom:-8rem; right:-6rem; background:#a0c4ff;} /* 蓝紫光晕 */
-@keyframes float{0%{transform:translateY(0) translateX(0);}50%{transform:translateY(20px) translateX(20px);}100%{transform:translateY(0) translateX(0);}}
-
-/* 粒子 */
-.particle {
-    position:absolute; width:6px; height:6px; border-radius:50%; background:white;
-    opacity:0.3; animation: particleAnim linear infinite;
-}
-@keyframes particleAnim {
-    0%{transform: translateY(0) translateX(0); opacity:0.3;}
-    50%{opacity:0.6;}
-    100%{transform: translateY(-100vh) translateX(50px); opacity:0;}
-}
-
-/* 渐显文字 */
-.fade-in { opacity:0; animation: fadeIn 2s forwards;}
-@keyframes fadeIn{to{opacity:1;}}
-
-/* 高级按钮 */
-.fancy-btn {
-    position: relative; overflow:hidden;
-}
-.fancy-btn::before {
-    content:'';
-    position:absolute; top:-50%; left:-50%;
-    width:200%; height:200%;
-    background: linear-gradient(60deg,#ff7c7c,#f9d423,#7cf3ff);
-    opacity:0.4;
-    transform: rotate(45deg) translate(-100%,-100%);
-    transition: transform 0.5s ease;
-}
-.fancy-btn:hover::before { transform: rotate(45deg) translate(0,0); }
-.fancy-btn:hover { transform: scale(1.05); transition:transform 0.3s; }
-.fade-out {animation: fadeOut 0.7s forwards;}
-@keyframes fadeOut{to{opacity:0; transform:translateY(-20px);}}
-.fade-in-page {animation: fadeInPage 0.7s forwards;}
-@keyframes fadeInPage{from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
-</style>
-</head>
-<body>
-    <!-- 背景光晕 -->
-    <div class="bg-glow"></div>
-    <div class="bg-glow"></div>
-
-    <!-- 粒子 -->
-    <script>
-        for(let i=0;i<50;i++){
-            const p = document.createElement('div');
-            p.className='particle';
-            p.style.left = Math.random()*100+'vw';
-            p.style.top = Math.random()*100+'vh';
-            p.style.animationDuration = (5+Math.random()*10)+'s';
-            document.body.appendChild(p);
-        }
-    </script>
-
-    <!-- 欢迎页 -->
-    <div id="welcomePage" class="relative z-10 flex flex-col items-center justify-center space-y-12 text-center">
-       <h1 class="text-5xl md:text-7xl font-extrabold text-black fade-in">
-    小雅，帮你看见自己
+@@ -81,45 +81,45 @@
+        <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-yellow-400 to-green-500 fade-in">
+            小雅，帮你看见自己
         </h1>
+        <button id="startBtn" class="fancy-btn relative rounded-full px-12 py-4 text-lg font-bold text-white shadow-xl">
         <button id="startBtn" class="fancy-btn relative rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl">
             点击开始
         </button>
