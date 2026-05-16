@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XiaoYa</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@keyframes float {
+  0%,100% { transform: translate(0,0); }
+  50% { transform: translate(20px,20px); }
+}
+.bg-glow {
+  position:absolute;
+  width:30rem; height:30rem;
+  border-radius:50%; filter:blur(140px);
+  opacity:0.3; animation:float 10s ease-in-out infinite alternate;
+}
+.bg-glow:nth-child(1){ top:-8rem; left:-6rem; background:#ff7c7c; }
+.bg-glow:nth-child(2){ bottom:-8rem; right:-6rem; background:#7cf3ff; }
+.fade-in { opacity:0; animation:fadeIn 2s forwards; }
+@keyframes fadeIn { to { opacity:1; } }
+.fancy-btn {
+  position: relative; overflow:hidden;
+}
+.fancy-btn::before {
+  content:''; position:absolute;
+  top:-50%; left:-50%;
+  width:200%; height:200%;
+  background:linear-gradient(60deg,#ff7c7c,#f9d423,#7cf3ff);
+  opacity:0.4; transform:rotate(45deg) translate(-100%,-100%);
+  transition: transform 0.5s ease;
+}
+.fancy-btn:hover::before { transform:rotate(45deg) translate(0,0); }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-800 antialiased relative h-screen overflow-hidden">
+
+<div class="bg-glow"></div>
+<div class="bg-glow"></div>
+
+<div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6">
+  <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-yellow-400 to-green-500 fade-in text-center">
+    小雅，帮你看见自己
+  </h1>
+  <p class="mt-6 max-w-md text-center text-sm text-slate-500">
+    AI 自我觉察对话工具 · 不能替代专业心理咨询或医疗
+  </p>
+  <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
+    点击开始
+  </button>
+</div>
+
+<div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10">
+  <div id="chatLog" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 bg-white"></div>
+  <div class="border-t border-slate-200/70 p-4 md:p-5 bg-slate-50">
+    <p id="inputHint" class="mb-2 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
+    <div class="flex items-center gap-4">
+      <textarea id="messageInput" class="flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-lg placeholder:text-slate-400 outline-none focus:border-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
+        placeholder="请输入内容..." rows="2" maxlength="2000" disabled></textarea>
+      <button id="sendBtn" type="button" class="rounded-full bg-slate-900 px-6 py-3 text-white font-medium hover:bg-slate-800 transition disabled:cursor-not-allowed disabled:bg-slate-400" disabled>发送</button>
+    </div>
+  </div>
+</div>
+
+<div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
+  <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+    <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
+    <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
+      <p><strong>1. 服务性质</strong>「小雅」是 AI 驱动的自我觉察与情绪梳理工具，<strong>不能替代</strong>心理咨询师、精神科医生或其他医疗专业人员，<strong>不提供</strong>疾病诊断、心理治疗、处方或紧急干预。</p>
+      <p><strong>2. 隐私与数据</strong>您输入的内容将发送至第三方 AI 服务进行处理。请勿输入身份证号、住址、银行卡号等敏感个人信息。对话主要保存在当前浏览器中，我们无法保证绝对保密，请勿用于处理极端隐私事项。</p>
+      <p><strong>3. 危机情况</strong>若您有自伤、伤人或立即生命危险，请<strong>立刻</strong>拨打当地紧急电话（如 <strong>110</strong>、<strong>120</strong>），或心理援助热线（如全国 24 小时心理援助热线 <strong>400-161-9995</strong>，请以当地最新公布号码为准），并联系身边可信的人。本工具不能处理紧急危机。</p>
+      <p><strong>4. 使用资格</strong>继续使用即表示您已年满 18 周岁，或在监护人知情同意下使用，并理解上述限制。</p>
+    </div>
+    <label class="mt-5 flex cursor-pointer items-start gap-3 text-sm text-slate-800">
+      <input id="disclaimerCheck" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300">
+      <span>我已阅读并理解上述内容，知晓本工具的能力与限制</span>
+    </label>
+    <div class="mt-5 flex gap-3">
+      <button id="disclaimerCancel" type="button" class="flex-1 rounded-xl border border-slate-200 py-3 text-slate-600 hover:bg-slate-50">返回</button>
+      <button id="disclaimerConfirm" type="button" class="flex-1 rounded-xl bg-slate-900 py-3 font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400" disabled>同意并开始对话</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DISCLAIMER_VERSION = {{ disclaimer_version | tojson }};
+const DISCLAIMER_STORAGE_KEY = 'xiaoya_disclaimer_' + DISCLAIMER_VERSION;
+
+const welcomePage = document.getElementById('welcomePage');
+const chatPage = document.getElementById('chatPage');
+const startBtn = document.getElementById('startBtn');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const chatLog = document.getElementById('chatLog');
+const inputHint = document.getElementById('inputHint');
+const disclaimerModal = document.getElementById('disclaimerModal');
+const disclaimerCheck = document.getElementById('disclaimerCheck');
+const disclaimerConfirm = document.getElementById('disclaimerConfirm');
+const disclaimerCancel = document.getElementById('disclaimerCancel');
+
+let conversation = [];
+let isStreaming = false;
+let disclaimerAccepted = sessionStorage.getItem(DISCLAIMER_STORAGE_KEY) === '1';
+
+function setInputEnabled(enabled) {
+  messageInput.disabled = !enabled;
+  sendBtn.disabled = !enabled || isStreaming;
+  inputHint.classList.toggle('hidden', enabled);
+  messageInput.placeholder = enabled ? '请输入内容...' : '请先同意使用须知';
+}
+
+function showDisclaimerModal() {
+  disclaimerCheck.checked = false;
+  disclaimerConfirm.disabled = true;
+  disclaimerModal.classList.remove('hidden');
+  disclaimerModal.classList.add('flex');
+}
+
+function hideDisclaimerModal() {
+  disclaimerModal.classList.add('hidden');
+  disclaimerModal.classList.remove('flex');
+}
+
+function acceptDisclaimer() {
+  disclaimerAccepted = true;
+  sessionStorage.setItem(DISCLAIMER_STORAGE_KEY, '1');
+  hideDisclaimerModal();
+  setInputEnabled(true);
+  messageInput.focus();
+}
+
+function ensureDisclaimerBeforeSend() {
+  if (disclaimerAccepted) return true;
+  showDisclaimerModal();
+  return false;
+}
+
+startBtn.addEventListener('click', () => {
+  welcomePage.classList.add('hidden');
+  chatPage.classList.remove('hidden');
+  if (disclaimerAccepted) {
+    setInputEnabled(true);
+    messageInput.focus();
+  } else {
+    setInputEnabled(false);
+    showDisclaimerModal();
+  }
+});
+
+disclaimerCheck.addEventListener('change', () => {
+  disclaimerConfirm.disabled = !disclaimerCheck.checked;
+});
+
+disclaimerConfirm.addEventListener('click', () => {
+  if (!disclaimerCheck.checked) return;
+  acceptDisclaimer();
+});
+
+disclaimerCancel.addEventListener('click', () => {
+  hideDisclaimerModal();
+  welcomePage.classList.remove('hidden');
+  chatPage.classList.add('hidden');
+});
+
+function scrollToBottom() {
+  if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function createMessage(role, content, isTyping = false) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'mb-6 ' + (role === 'user' ? 'text-right' : 'text-left');
+
+  const msg = document.createElement('div');
+  msg.className = 'inline-block max-w-[80%] px-6 py-4 rounded-2xl break-words whitespace-pre-wrap ' +
+    (role === 'user' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800');
+
+  if (isTyping) {
+    const typing = document.createElement('span');
+    typing.className = 'animate-pulse';
+    typing.textContent = '思考中...';
+    msg.appendChild(typing);
+  } else {
+    msg.textContent = content;
+  }
+
+  wrapper.appendChild(msg);
+  chatLog.appendChild(wrapper);
+  scrollToBottom();
+  return { wrapper, msg };
+}
+
+async function readAssistantResponse(response, onChunk) {
+  if (!response.body) {
+    onChunk(await response.text());
+    return;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    onChunk(decoder.decode(value, { stream: true }));
+  }
+
+  const tail = decoder.decode();
+  if (tail) onChunk(tail);
+}
+
+async function sendMessage() {
+  if (isStreaming) return;
+  if (!ensureDisclaimerBeforeSend()) return;
+
+  const message = messageInput.value.trim();
+  if (!message) return;
+
+  conversation.push({ role: 'user', content: message });
+  createMessage('user', message);
+  messageInput.value = '';
+
+  isStreaming = true;
+  sendBtn.disabled = true;
+  const typingMsg = createMessage('assistant', '', true);
+
+  try {
+    const response = await fetch('/api/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: conversation,
+        stream: true,
+        disclaimer_acknowledged: true,
+        disclaimer_version: DISCLAIMER_VERSION,
+      }),
+    });
+
+    if (!response.ok) {
+      let err = '请求失败';
+      try {
+        const d = await response.json();
+        err = d.error || err;
+      } catch {
+        err = (await response.text()) || err;
+      }
+      if (response.status === 403) {
+        disclaimerAccepted = false;
+        sessionStorage.removeItem(DISCLAIMER_STORAGE_KEY);
+        setInputEnabled(false);
+        showDisclaimerModal();
+      }
+      typingMsg.msg.textContent = err;
+      conversation.pop();
+      return;
+    }
+
+    let fullText = '';
+    let receivedChunk = false;
+
+    await readAssistantResponse(response, (chunk) => {
+      if (!chunk) return;
+      if (!receivedChunk) {
+        typingMsg.msg.textContent = '';
+        receivedChunk = true;
+      }
+      fullText += chunk;
+      typingMsg.msg.textContent = fullText;
+      scrollToBottom();
+    });
+    const finalText = fullText.trim();
+    if (!finalText) {
+      typingMsg.msg.textContent = '未收到回复，请稍后再试';
+      conversation.pop();
+      return;
+    }
+    typingMsg.msg.textContent = finalText;
+    conversation.push({ role: 'assistant', content: finalText });
+  } catch (err) {
+    typingMsg.msg.textContent = '请求失败: ' + (err.message || '网络错误');
+    conversation.pop();
+  } finally {
+    isStreaming = false;
+    sendBtn.disabled = !disclaimerAccepted;
+  }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+</body>
+</html>
