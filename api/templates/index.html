@@ -3,708 +3,83 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>XiaoYa | 心理创伤与防御识别 Demo</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #f6efe7;
-            --bg-accent: #efe3d5;
-            --paper: rgba(255, 252, 247, 0.84);
-            --paper-strong: #fffaf5;
-            --text: #2f241d;
-            --muted: #776459;
-            --line: rgba(91, 66, 48, 0.14);
-            --brand: #b65b3a;
-            --brand-deep: #8d3e24;
-            --sage: #667966;
-            --shadow: 0 30px 70px rgba(96, 64, 42, 0.12);
-            --radius-xl: 32px;
-            --radius-lg: 22px;
-            --radius-md: 18px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html, body {
-            margin: 0;
-            min-height: 100%;
-            background:
-                radial-gradient(circle at top left, rgba(255, 255, 255, 0.8), transparent 28%),
-                radial-gradient(circle at 85% 12%, rgba(182, 91, 58, 0.14), transparent 20%),
-                linear-gradient(180deg, #f9f2ea 0%, #f5ebdf 42%, #efe3d6 100%);
-            color: var(--text);
-            font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-        }
-
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            inset: auto;
-            width: 26rem;
-            height: 26rem;
-            border-radius: 50%;
-            filter: blur(18px);
-            opacity: 0.36;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body::before {
-            top: 3rem;
-            right: -8rem;
-            background: rgba(182, 91, 58, 0.16);
-        }
-
-        body::after {
-            bottom: -8rem;
-            left: -7rem;
-            background: rgba(102, 121, 102, 0.16);
-        }
-
-        .shell {
-            position: relative;
-            z-index: 1;
-            width: min(1240px, calc(100vw - 32px));
-            margin: 24px auto;
-            padding: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.48);
-            border-radius: 36px;
-            background: rgba(255, 249, 243, 0.55);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(22px);
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 380px minmax(0, 1fr);
-            gap: 18px;
-            min-height: calc(100vh - 84px);
-        }
-
-        .panel,
-        .chat-shell {
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--line);
-            background: var(--paper);
-            backdrop-filter: blur(16px);
-        }
-
-        .panel {
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-        }
-
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: rgba(182, 91, 58, 0.1);
-            color: var(--brand-deep);
-            font-size: 0.9rem;
-            letter-spacing: 0.04em;
-        }
-
-        .eyebrow::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--brand);
-            box-shadow: 0 0 0 8px rgba(182, 91, 58, 0.12);
-        }
-
-        h1 {
-            margin: 24px 0 12px;
-            font-family: "Source Serif 4", serif;
-            font-size: clamp(2.8rem, 6vw, 4.4rem);
-            line-height: 0.96;
-            letter-spacing: -0.04em;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            margin: 0;
-            max-width: 18em;
-            color: var(--muted);
-            font-size: 1rem;
-            line-height: 1.85;
-        }
-
-        .cards,
-        .bullet-list,
-        .starter-grid {
-            display: grid;
-            gap: 14px;
-        }
-
-        .cards {
-            margin-top: 30px;
-        }
-
-        .info-card,
-        .note-card {
-            padding: 18px 18px 20px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--line);
-            background: rgba(255, 252, 248, 0.88);
-        }
-
-        .info-card h2,
-        .note-card h2,
-        .chat-header h2 {
-            margin: 0 0 10px;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .info-card p,
-        .note-card p,
-        .chat-subtitle,
-        .disclaimer,
-        .message p,
-        textarea,
-        button,
-        .chip {
-            font-size: 0.96rem;
-            line-height: 1.75;
-        }
-
-        .bullet-list {
-            margin-top: 12px;
-        }
-
-        .bullet {
-            display: flex;
-            gap: 10px;
-            color: var(--muted);
-        }
-
-        .bullet::before {
-            content: "•";
-            color: var(--brand);
-            font-weight: 700;
-        }
-
-        .stat-strip {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 22px;
-        }
-
-        .stat {
-            padding: 16px 14px;
-            border-radius: 18px;
-            background: rgba(239, 227, 213, 0.62);
-            border: 1px solid rgba(141, 62, 36, 0.08);
-        }
-
-        .stat strong {
-            display: block;
-            font-size: 1.05rem;
-            color: var(--text);
-        }
-
-        .stat span {
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-
-        .chat-shell {
-            display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto;
-            min-height: 100%;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            padding: 24px 28px 18px;
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            align-items: end;
-            justify-content: space-between;
-            gap: 18px;
-        }
-
-        .chat-header h2 {
-            margin-bottom: 6px;
-            font-size: 1.2rem;
-        }
-
-        .chat-subtitle {
-            margin: 0;
-            color: var(--muted);
-        }
-
-        .status-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .badge,
-        .ghost-btn,
-        .chip,
-        .send-btn {
-            border-radius: 999px;
-            border: 1px solid transparent;
-        }
-
-        .badge {
-            padding: 8px 12px;
-            background: rgba(102, 121, 102, 0.12);
-            color: var(--sage);
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .ghost-btn {
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.7);
-            color: var(--text);
-            border-color: var(--line);
-            cursor: pointer;
-            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-        }
-
-        .ghost-btn:hover {
-            transform: translateY(-1px);
-            border-color: rgba(182, 91, 58, 0.25);
-            background: rgba(255, 252, 248, 0.95);
-        }
-
-        .chat-log {
-            padding: 22px 24px 10px;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-        }
-
-        .message {
-            max-width: min(760px, 88%);
-            margin-bottom: 16px;
-            padding: 18px 18px 16px;
-            border-radius: 24px;
-            border: 1px solid var(--line);
-            white-space: pre-wrap;
-            word-break: break-word;
-            box-shadow: 0 10px 25px rgba(81, 59, 43, 0.06);
-            animation: rise 360ms ease;
-        }
-
-        .message p {
-            margin: 0;
-        }
-
-        .message.user {
-            margin-left: auto;
-            background: linear-gradient(180deg, rgba(182, 91, 58, 0.98), rgba(141, 62, 36, 0.98));
-            border-color: transparent;
-            color: #fff9f4;
-        }
-
-        .message.assistant {
-            background: rgba(255, 252, 247, 0.94);
-            color: var(--text);
-        }
-
-        .message.system {
-            max-width: 100%;
-            background: rgba(102, 121, 102, 0.08);
-            color: #4e5b4e;
-        }
-
-        .message-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            opacity: 0.85;
-        }
-
-        .message-label::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            opacity: 0.7;
-        }
-
-        .composer {
-            padding: 18px;
-            border-top: 1px solid var(--line);
-            background: rgba(255, 250, 245, 0.9);
-        }
-
-        .starter-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-bottom: 14px;
-        }
-
-        .chip {
-            width: 100%;
-            padding: 14px 16px;
-            text-align: left;
-            background: rgba(255, 255, 255, 0.78);
-            border-color: var(--line);
-            color: var(--text);
-            cursor: pointer;
-            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-        }
-
-        .chip:hover {
-            transform: translateY(-1px);
-            border-color: rgba(182, 91, 58, 0.25);
-            background: rgba(255, 252, 248, 0.98);
-        }
-
-        .input-wrap {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 12px;
-            align-items: end;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 112px;
-            max-height: 240px;
-            padding: 18px 20px;
-            resize: none;
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.9);
-            color: var(--text);
-            outline: none;
-            transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
-        }
-
-        textarea:focus {
-            border-color: rgba(182, 91, 58, 0.4);
-            box-shadow: 0 0 0 5px rgba(182, 91, 58, 0.08);
-            background: #fffdf9;
-        }
-
-        textarea::placeholder {
-            color: #9d8c80;
-        }
-
-        .send-btn {
-            min-width: 124px;
-            padding: 16px 20px;
-            background: linear-gradient(180deg, var(--brand), var(--brand-deep));
-            color: #fff7f2;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 14px 28px rgba(141, 62, 36, 0.22);
-            transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
-        }
-
-        .send-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 18px 34px rgba(141, 62, 36, 0.25);
-        }
-
-        .send-btn:disabled,
-        .ghost-btn:disabled {
-            opacity: 0.58;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .disclaimer {
-            margin: 14px 4px 0;
-            color: var(--muted);
-        }
-
-        .typing {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .typing span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(182, 91, 58, 0.7);
-            animation: pulse 1s infinite ease-in-out;
-        }
-
-        .typing span:nth-child(2) {
-            animation-delay: 0.14s;
-        }
-
-        .typing span:nth-child(3) {
-            animation-delay: 0.28s;
-        }
-
-        @keyframes pulse {
-            0%, 80%, 100% {
-                transform: scale(0.72);
-                opacity: 0.45;
-            }
-            40% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes rise {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 1100px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .panel {
-                gap: 18px;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .shell {
-                width: min(100vw - 16px, 100%);
-                margin: 8px auto;
-                padding: 10px;
-                border-radius: 24px;
-            }
-
-            .panel,
-            .chat-shell {
-                border-radius: 24px;
-            }
-
-            .chat-header,
-            .panel {
-                padding: 20px;
-            }
-
-            .chat-log {
-                padding: 18px 16px 8px;
-            }
-
-            .composer {
-                padding: 14px;
-            }
-
-            .starter-grid,
-            .stat-strip,
-            .input-wrap {
-                grid-template-columns: 1fr;
-            }
-
-            .message {
-                max-width: 100%;
-            }
-
-            .status-group {
-                justify-content: flex-start;
-            }
-        }
-    </style>
+    <title>XiaoYa 简洁版心理聊天</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="shell">
-        <div class="layout">
-            <aside class="panel">
-                <div>
-                    <span class="eyebrow">Psychological Reflection Agent</span>
-                    <h1>XiaoYa</h1>
-                    <p class="subtitle">
-                        一个用于自我觉察的心理学 agent demo，帮助用户温和地识别潜在的创伤痕迹、情绪卡点与防御性行为。
-                    </p>
+<body class="min-h-screen bg-stone-50 text-slate-800 antialiased">
+    <div class="mx-auto max-w-5xl px-6 py-16 md:py-24">
+        <main class="space-y-10">
+            <!-- 输入区域 -->
+            <section class="rounded-[2rem] border border-slate-200/70 bg-slate-50 shadow-sm backdrop-blur-sm">
+                <textarea
+                    id="messageInput"
+                    class="h-48 w-full resize-none rounded-[2rem] border-0 bg-transparent px-8 pt-8 text-lg leading-loose outline-none placeholder:text-slate-400"
+                    placeholder="请输入具体片段或感受，例如：我和伴侣吵架时会突然特别冷，像什么都感觉不到。"
+                ></textarea>
 
-                    <div class="cards">
-                        <article class="info-card">
-                            <h2>它会帮你做什么</h2>
-                            <div class="bullet-list">
-                                <div class="bullet">梳理反复出现的人际模式、情绪触发点和内在自我对话。</div>
-                                <div class="bullet">把回避、讨好、过度理性、控制、麻木等模式视作“保护策略”来理解。</div>
-                                <div class="bullet">给出一小步可执行的反思问题、记录提示或落地练习。</div>
-                            </div>
-                        </article>
-
-                        <article class="info-card">
-                            <h2>它不会替代什么</h2>
-                            <div class="bullet-list">
-                                <div class="bullet">不做医疗诊断，也不替代心理治疗或危机干预。</div>
-                                <div class="bullet">如果你正处在伤害自己或他人的风险中，请优先联系当地紧急援助或可信任的人。</div>
-                            </div>
-                        </article>
-                    </div>
-
-                    <div class="stat-strip">
-                        <div class="stat">
-                            <strong>创伤线索</strong>
-                            <span>识别反复被触发的旧经验</span>
-                        </div>
-                        <div class="stat">
-                            <strong>防御模式</strong>
-                            <span>理解行为背后的保护意义</span>
-                        </div>
-                        <div class="stat">
-                            <strong>温和练习</strong>
-                            <span>把觉察带回当下和身体</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="note-card">
-                    <h2>适合怎样开场</h2>
-                    <p>
-                        最有效的输入通常不是“我怎么了”，而是“我总在什么情境下卡住、躲开、爆炸、麻木或讨好”。越具体，XiaoYa 越能帮你看见模式。
-                    </p>
-                </div>
-            </aside>
-
-            <section class="chat-shell">
-                <header class="chat-header">
-                    <div>
-                        <h2>对话工作台</h2>
-                        <p class="chat-subtitle">像和一个温和、克制、善于提问的心理学观察者对话。</p>
-                    </div>
-                    <div class="status-group">
-                        <span class="badge">Streaming Demo</span>
-                        <button id="clearBtn" class="ghost-btn" type="button">清空会话</button>
-                    </div>
-                </header>
-
-                <div id="chatLog" class="chat-log"></div>
-
-                <div class="composer">
-                    <div class="starter-grid">
-                        <button class="chip" type="button" data-starter="我总是在别人冷淡一点时就特别焦虑，像是马上要被抛弃。你能陪我看看这背后可能是什么吗？">我一被冷淡就很焦虑</button>
-                        <button class="chip" type="button" data-starter="我习惯先分析、先讲道理，可是一谈到自己的感受就像断线了一样。这算一种防御吗？">我总在理性化自己的感受</button>
-                        <button class="chip" type="button" data-starter="我经常答应很多事，明明累了也不敢拒绝。事后又会生气。这个模式像什么？">我会讨好别人然后暗自生气</button>
-                        <button class="chip" type="button" data-starter="每次被批评我都会特别羞耻，然后马上想证明自己。你可以帮我拆一下这个反应链条吗？">我被批评时会羞耻和过度证明</button>
-                    </div>
-
-                    <div class="input-wrap">
-                        <textarea
-                            id="messageInput"
-                            placeholder="输入一个具体片段，例如：我和伴侣吵架时会突然特别冷，像什么都感觉不到。"
-                        ></textarea>
-                        <button id="sendBtn" class="send-btn" type="button">开始对话</button>
-                    </div>
-
-                    <p class="disclaimer">
-                        仅用于自我觉察与演示。若你处于即时危险、持续失眠失控、或有明确自伤他伤念头，请优先联系当地紧急援助或身边可信任的人。
-                    </p>
+                <div class="flex items-center justify-between border-t border-slate-200/70 px-8 py-5">
+                    <span class="text-sm tracking-wide text-slate-400">一行一条信息</span>
+                    <button
+                        id="sendBtn"
+                        class="rounded-full bg-slate-900 px-7 py-3 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        开始对话
+                    </button>
                 </div>
             </section>
-        </div>
+
+            <!-- 输出区域 -->
+            <section id="chatLogSection" class="rounded-[2rem] border border-slate-200/70 bg-white shadow-sm transition-all duration-500">
+                <div
+                    id="chatLog"
+                    class="min-h-[42rem] whitespace-pre-wrap px-10 py-10 text-[1.05rem] leading-9 text-slate-700 transition-opacity duration-300 overflow-y-auto"
+                ></div>
+            </section>
+        </main>
     </div>
 
     <script>
         const chatLog = document.getElementById('chatLog');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const starterButtons = document.querySelectorAll('[data-starter]');
-
-        const initialAssistantMessage = [
-            '我是 XiaoYa。',
-            '',
-            '你可以把我当成一个温和的心理学观察者：我会帮你梳理触发点、关系模式、可能的防御策略，以及这些策略想保护你的是什么。',
-            '',
-            '你可以直接讲一个最近让你反复卡住的片段，我们从那里开始。'
-        ].join('\n');
 
         let conversation = [];
         let isStreaming = false;
-
-        function autoResize() {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = Math.min(messageInput.scrollHeight, 240) + 'px';
-        }
 
         function scrollToBottom() {
             chatLog.scrollTop = chatLog.scrollHeight;
         }
 
         function createMessage(role, content, isTyping = false) {
-            const wrapper = document.createElement('article');
-            wrapper.className = `message ${role}`;
-
-            const label = document.createElement('div');
-            label.className = 'message-label';
-            label.textContent =
-                role === 'user' ? 'You' :
-                role === 'assistant' ? 'XiaoYa' :
-                'Note';
-
-            const body = document.createElement('p');
+            const wrapper = document.createElement('div');
+            wrapper.className = `mb-6 ${role === 'user' ? 'text-right' : 'text-left'}`;
+            const msg = document.createElement('div');
+            msg.className = `inline-block max-w-[80%] px-6 py-4 rounded-2xl ${role === 'user' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'} break-words`;
             if (isTyping) {
-                body.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+                msg.innerHTML = '<span class="animate-pulse">思考中...</span>';
             } else {
-                body.textContent = content;
+                msg.textContent = content;
             }
-
-            wrapper.appendChild(label);
-            wrapper.appendChild(body);
+            wrapper.appendChild(msg);
             chatLog.appendChild(wrapper);
             scrollToBottom();
-
-            return { wrapper, body };
+            return { wrapper, msg };
         }
 
-        function resetConversation() {
-            conversation = [];
-            chatLog.innerHTML = '';
-            createMessage('system', '提示：XiaoYa 更适合处理“具体情境 + 当时感受 + 你做了什么”这样的输入。');
-            createMessage('assistant', initialAssistantMessage);
-            messageInput.value = '';
-            autoResize();
-        }
-
-        async function sendMessage(prefilledMessage) {
+        async function sendMessage() {
             if (isStreaming) return;
 
-            const message = (prefilledMessage ?? messageInput.value).trim();
-            if (!message) {
-                messageInput.focus();
-                return;
-            }
+            const message = messageInput.value.trim();
+            if (!message) return;
 
             conversation.push({ role: 'user', content: message });
             createMessage('user', message);
             messageInput.value = '';
-            autoResize();
+            scrollToBottom();
 
             isStreaming = true;
             sendBtn.disabled = true;
-            clearBtn.disabled = true;
-            sendBtn.textContent = '思考中...';
-
-            const typingMessage = createMessage('assistant', '', true);
-            let assistantText = '';
+            const typingMsg = createMessage('assistant', '', true);
 
             try {
                 const response = await fetch('/api/process', {
@@ -714,85 +89,59 @@
                 });
 
                 if (!response.ok) {
-                    let errorText = '请求失败，请稍后再试。';
+                    let errorText = '请求失败';
                     try {
-                        const errorData = await response.json();
-                        errorText = errorData.error || errorText;
-                    } catch (_) {
-                        const plainText = await response.text();
-                        if (plainText) errorText = plainText;
+                        const errData = await response.json();
+                        errorText = errData.error || errorText;
+                    } catch {
+                        errorText = await response.text();
                     }
-
-                    typingMessage.body.textContent = `Error: ${errorText}`;
-                    typingMessage.wrapper.classList.add('system');
+                    typingMsg.msg.textContent = errorText;
                     return;
                 }
 
                 if (!response.body) {
-                    assistantText = await response.text();
-                    typingMessage.body.textContent = assistantText;
-                    conversation.push({ role: 'assistant', content: assistantText });
+                    const text = await response.text();
+                    typingMsg.msg.textContent = text;
+                    conversation.push({ role: 'assistant', content: text });
                     return;
                 }
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder('utf-8');
-                let started = false;
+                let firstChunk = true;
+                let assistantText = '';
 
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-
-                    if (!started) {
-                        typingMessage.body.textContent = '';
-                        started = true;
+                    if (firstChunk) {
+                        typingMsg.msg.textContent = '';
+                        firstChunk = false;
                     }
-
                     assistantText += decoder.decode(value, { stream: true });
-                    typingMessage.body.textContent = assistantText;
+                    typingMsg.msg.textContent = assistantText;
                     scrollToBottom();
                 }
-
                 assistantText += decoder.decode();
-                typingMessage.body.textContent = assistantText;
+                typingMsg.msg.textContent = assistantText;
+                conversation.push({ role: 'assistant', content: assistantText.trim() });
 
-                if (assistantText.trim()) {
-                    conversation.push({ role: 'assistant', content: assistantText.trim() });
-                }
-            } catch (error) {
-                typingMessage.body.textContent = `Request failed: ${error.message}`;
-                typingMessage.wrapper.classList.add('system');
+            } catch (err) {
+                typingMsg.msg.textContent = `请求失败: ${err.message}`;
             } finally {
                 isStreaming = false;
                 sendBtn.disabled = false;
-                clearBtn.disabled = false;
-                sendBtn.textContent = '继续对话';
-                scrollToBottom();
             }
         }
 
-        sendBtn.addEventListener('click', () => sendMessage());
-
-        clearBtn.addEventListener('click', resetConversation);
-
-        messageInput.addEventListener('input', autoResize);
-        messageInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
-
-        starterButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                const starter = button.getAttribute('data-starter') || '';
-                messageInput.value = starter;
-                autoResize();
-                messageInput.focus();
-            });
-        });
-
-        resetConversation();
     </script>
 </body>
 </html>
