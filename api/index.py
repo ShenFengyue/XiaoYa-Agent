@@ -50,6 +50,10 @@ When risk is present:
 - If the user mentions wanting to hurt themselves or others, being unsafe, or in immediate danger, prioritize safety above analysis.
 - First ask if they are currently safe, then instruct them to contact local emergency services or a trusted person immediately.
 - Keep risk responses short, practical, and focused on immediate safety.
+
+Do not use any formatting, Markdown symbols, asterisks, or special characters. 
+Respond only in plain text.
+
 """
 
 CRISIS_PATTERN = re.compile(
