@@ -3,48 +3,69 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>XiaoYa 简洁版心理聊天</title>
+    <title>XiaoYa 心理聊天</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-stone-50 text-slate-800 antialiased">
-    <div class="mx-auto max-w-5xl px-6 py-16 md:py-24">
-        <main class="space-y-10">
-            <!-- 输入区域 -->
-            <section class="rounded-[2rem] border border-slate-200/70 bg-slate-50 shadow-sm backdrop-blur-sm">
-                <textarea
-                    id="messageInput"
-                    class="h-48 w-full resize-none rounded-[2rem] border-0 bg-transparent px-8 pt-8 text-lg leading-loose outline-none placeholder:text-slate-400"
-                    placeholder="请输入具体片段或感受，例如：我和伴侣吵架时会突然特别冷，像什么都感觉不到。"
-                ></textarea>
+<body class="min-h-screen bg-stone-50 text-slate-800 antialiased flex items-center justify-center">
 
-                <div class="flex items-center justify-between border-t border-slate-200/70 px-8 py-5">
-                    <span class="text-sm tracking-wide text-slate-400">一行一条信息</span>
-                    <button
-                        id="sendBtn"
-                        class="rounded-full bg-slate-900 px-7 py-3 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        开始对话
-                    </button>
-                </div>
-            </section>
+    <!-- 主页面 -->
+    <div id="welcomePage" class="flex flex-col items-center justify-center space-y-8">
+        <h1 class="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-yellow-400 to-green-500 text-center">
+            小雅，帮你看见自己
+        </h1>
+        <button
+            id="startBtn"
+            class="rounded-full bg-slate-900 px-10 py-4 text-lg font-semibold text-white shadow-lg hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
+        >
+            点击开始
+        </button>
+    </div>
 
-            <!-- 输出区域 -->
-            <section id="chatLogSection" class="rounded-[2rem] border border-slate-200/70 bg-white shadow-sm transition-all duration-500">
-                <div
-                    id="chatLog"
-                    class="min-h-[42rem] whitespace-pre-wrap px-10 py-10 text-[1.05rem] leading-9 text-slate-700 transition-opacity duration-300 overflow-y-auto"
-                ></div>
-            </section>
-        </main>
+    <!-- 聊天页面 -->
+    <div id="chatPage" class="hidden w-full max-w-5xl px-6 py-16 md:py-24 space-y-10">
+        <section class="rounded-[2rem] border border-slate-200/70 bg-slate-50 shadow-sm backdrop-blur-sm">
+            <textarea
+                id="messageInput"
+                class="h-48 w-full resize-none rounded-[2rem] border-0 bg-transparent px-8 pt-8 text-lg leading-loose outline-none placeholder:text-slate-400"
+                placeholder="请输入具体片段或感受，例如：我和伴侣吵架时会突然特别冷，像什么都感觉不到。"
+            ></textarea>
+
+            <div class="flex items-center justify-between border-t border-slate-200/70 px-8 py-5">
+                <span class="text-sm tracking-wide text-slate-400">一行一条信息</span>
+                <button
+                    id="sendBtn"
+                    class="rounded-full bg-slate-900 px-7 py-3 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    开始对话
+                </button>
+            </div>
+        </section>
+
+        <section id="chatLogSection" class="rounded-[2rem] border border-slate-200/70 bg-white shadow-sm transition-all duration-500">
+            <div
+                id="chatLog"
+                class="min-h-[42rem] whitespace-pre-wrap px-10 py-10 text-[1.05rem] leading-9 text-slate-700 transition-opacity duration-300 overflow-y-auto"
+            ></div>
+        </section>
     </div>
 
     <script>
-        const chatLog = document.getElementById('chatLog');
+        const welcomePage = document.getElementById('welcomePage');
+        const chatPage = document.getElementById('chatPage');
+        const startBtn = document.getElementById('startBtn');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
+        const chatLog = document.getElementById('chatLog');
 
         let conversation = [];
         let isStreaming = false;
+
+        // 切换到聊天页面
+        startBtn.addEventListener('click', () => {
+            welcomePage.classList.add('hidden');
+            chatPage.classList.remove('hidden');
+            messageInput.focus();
+        });
 
         function scrollToBottom() {
             chatLog.scrollTop = chatLog.scrollHeight;
