@@ -41,7 +41,7 @@
 
 <div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6">
   <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-yellow-400 to-green-500 fade-in text-center">
-    小雅，帮你看见自己
+    小雅，陪你看见自己
   </h1>
   <p class="mt-6 max-w-md text-center text-sm text-slate-500">
     AI 自我觉察对话工具 · 不能替代专业心理咨询或医疗
@@ -57,7 +57,7 @@
     <p id="inputHint" class="mb-2 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
     <div class="flex items-center gap-4">
       <textarea id="messageInput" class="flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-lg placeholder:text-slate-400 outline-none focus:border-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
-        placeholder="不妨先问问小雅能做什么" rows="2" maxlength="2000" disabled></textarea>
+        placeholder="不妨先问问小雅可以做什么" rows="2" maxlength="2000" disabled></textarea>
       <button id="sendBtn" type="button" class="rounded-full bg-slate-900 px-6 py-3 text-white font-medium hover:bg-slate-800 transition disabled:cursor-not-allowed disabled:bg-slate-400" disabled>发送</button>
     </div>
   </div>
@@ -107,7 +107,7 @@ function setInputEnabled(enabled) {
   messageInput.disabled = !enabled;
   sendBtn.disabled = !enabled || isStreaming;
   inputHint.classList.toggle('hidden', enabled);
-  messageInput.placeholder = enabled ? '请输入内容...' : '请先同意使用须知';
+  messageInput.placeholder = enabled ? '不妨先问问小雅可以做什么' : '请先同意使用须知';
 }
 
 function showDisclaimerModal() {
