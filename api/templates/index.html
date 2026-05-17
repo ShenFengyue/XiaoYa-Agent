@@ -26,7 +26,7 @@
     bottom: -10rem; right: -10rem; background: radial-gradient(circle, #a1c4fd 0%, #c2e9fb 100%);
   }
   
-  /* 渐变显示 */
+  /* 页面切换的渐变显示 */
   .page-transition {
     transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -48,7 +48,7 @@
   }
   .fancy-btn:hover::before { transform:rotate(45deg) translate(0,0); }
 
-  /* 优雅的等待动画 */
+  /* 三点跳跃思考动画 */
   .typing-dot {
     animation: typing-bounce 1.4s infinite ease-in-out;
   }
@@ -69,15 +69,16 @@
 <div class="bg-glow-1 pointer-events-none"></div>
 <div class="bg-glow-2 pointer-events-none"></div>
 
-<div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-transition">
+<div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-transition text-center">
   <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
-             bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 
-             text-center">
+             bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400">
     你好，我是小雅！
   </h1>
-  <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
-    开始对话
-  </button>
+  <div class="w-full flex justify-center">
+    <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
+      开始对话
+    </button>
+  </div>
 </div>
 
 <div id="chatPage" class="fixed inset-0 page-transition page-hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6">
@@ -105,12 +106,12 @@
 </div>
 
 <div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-neutral-900/20 backdrop-blur-sm p-4 page-transition opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
-  <div class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white/95 backdrop-blur-md p-8 shadow-2xl border border-neutral-100 transform scale-95 transition-transform duration-300">
+  <div class="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white/95 backdrop-blur-md p-8 shadow-2xl border border-neutral-100 transform scale-95 transition-transform duration-300">
     <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
     <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
       <p><strong>1. 服务性质</strong>：「小雅」是 AI 驱动的自我觉察与情绪梳理工具，<strong>不能替代</strong>心理咨询师、精神科医生或其他医疗专业人员，<strong>不提供</strong>疾病诊断、心理治疗、处方或紧急干预。</p>
       <p><strong>2. 隐私与数据</strong>：您输入的内容将发送至第三方 AI 服务进行处理。请勿输入身份证号、住址、银行卡号等敏感个人信息。对话主要保存在当前浏览器中，我们无法保证绝对保密，请勿用于处理极端隐私事项。</p>
-      <p><strong>3. 危机情况</strong>：若您有自伤、伤人或立即生命危险，请<strong>立刻</strong>拨打当地紧急电话（如 <strong>110</strong>、<strong>120</strong>），或心理援助热线（如全国 24 小时心理援助热线 <strong>400-161-9995</strong>，请以当地最新公布号码为准），并联系身边可信的人。本工具不能处理紧急危机。</p>
+      <p><strong>3. 危机情况</strong>：若您有自伤、伤人或立即生命危险，请<strong>立刻</strong>拨打当地紧急电话（如 <strong>110</strong>、<strong>120</strong>），或心理援助热线（如全国 24 解时心理援助热线 <strong>400-161-9995</strong>，请以当地最新公布号码为准），并联系身边可信的人。本工具不能处理紧急危机。</p>
       <p><strong>4. 使用资格</strong>：继续使用即表示您已年满 18 周岁，或在监护人知情同意下使用，并理解上述限制。</p>
       <p><strong>5. 个人介绍</strong>：我是申哲，你可以叫我子期，有任何问题可以添加微信：Shenzhetongxue</p>
     </div>
