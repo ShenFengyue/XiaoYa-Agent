@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>XiaoYa - 小雅空间</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -48,7 +48,7 @@
   transform: translateY(8px);
 }
 
-/* 消息气泡复制按钮 (hover显示) */
+/* 消息气泡复制按钮 (hover显示，移动端点击显示) */
 .message-bubble {
   position: relative;
 }
@@ -66,7 +66,8 @@
   backdrop-filter: blur(4px);
   color: #333;
 }
-.message-bubble:hover .copy-btn {
+.message-bubble:hover .copy-btn,
+.message-bubble:active .copy-btn {
   opacity: 1;
 }
 /* 用户消息深色背景下的复制按钮颜色 */
@@ -79,6 +80,20 @@
 .auto-textarea {
   overflow-y: hidden;
   transition: height 0.1s ease;
+}
+/* 移动端优化：输入区域更舒适 */
+@media (max-width: 640px) {
+  .copy-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .message-bubble {
+    max-width: 90% !important;
+  }
+  #chatPage .py-4 {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
 }
 </style>
 </head>
@@ -183,7 +198,7 @@ const exportHistoryBtn = document.getElementById('exportHistoryBtn');
 
 // 数据
 let conversation = [];            // 用于 API 的消息列表 {role, content}
-let chatHistory = [];            // 存储带时间戳的完整记录 {role, content, timestamp}
+let chatHistory = [];            // 存储完整记录 {role, content}
 let isStreaming = false;
 let disclaimerAccepted = sessionStorage.getItem(DISCLAIMER_STORAGE_KEY) === '1';
 
@@ -194,11 +209,6 @@ function showToast(msg, duration = 2000) {
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), duration);
-}
-
-// 获取当前时间字符串 (HH:MM)
-function getTimeString() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 // 复制消息内容
@@ -216,22 +226,8 @@ function attachCopyHandler(bubbleElement, contentText) {
   bubbleElement.appendChild(copyBtn);
 }
 
-// 为已有的消息元素添加时间戳和复制按钮 (用于助手流式消息)
-function enhanceMessage(wrapper, role, content, timestamp) {
-  // 寻找气泡元素
-  let bubble = wrapper.querySelector('.message-bubble');
-  if (!bubble) return;
-  // 时间戳
-  let timeSpan = document.createElement('div');
-  timeSpan.className = `text-xs text-slate-400 mt-1 ${role === 'user' ? 'text-right' : 'text-left'}`;
-  timeSpan.textContent = timestamp;
-  bubble.parentNode.insertBefore(timeSpan, bubble.nextSibling); // 放在气泡下方
-  // 复制按钮
-  attachCopyHandler(bubble, content);
-}
-
-// 创建完整消息 (含时间戳、复制按钮)
-function createFullMessage(role, content, timestamp = null) {
+// 创建完整消息 (带复制按钮，无时间戳)
+function createFullMessage(role, content) {
   const wrapper = document.createElement('div');
   wrapper.className = 'mb-6 flex w-full ' + (role === 'user' ? 'justify-end' : 'justify-start');
   
@@ -244,20 +240,13 @@ function createFullMessage(role, content, timestamp = null) {
   bubble.textContent = content;
   wrapper.appendChild(bubble);
   
-  // 时间戳
-  const timeStr = timestamp || getTimeString();
-  const timeDiv = document.createElement('div');
-  timeDiv.className = `text-xs text-slate-400 mt-1 ${role === 'user' ? 'text-right' : 'text-left'}`;
-  timeDiv.textContent = timeStr;
-  wrapper.appendChild(timeDiv);
-  
   // 复制按钮
   attachCopyHandler(bubble, content);
   
-  return { wrapper, timeStr };
+  return wrapper;
 }
 
-// 创建打字中的临时消息 (无时间戳、无复制按钮)
+// 创建打字中的临时消息 (无复制按钮)
 function createTypingMessage() {
   const wrapper = document.createElement('div');
   wrapper.className = 'mb-6 flex w-full justify-start';
@@ -273,17 +262,11 @@ function createTypingMessage() {
   return { wrapper, bubble };
 }
 
-// 将打字消息转换为最终消息 (添加内容、时间戳、复制按钮)
-function finalizeTypingMessage(wrapper, bubble, content, timestamp) {
+// 将打字消息转换为最终消息 (添加内容、复制按钮)
+function finalizeTypingMessage(wrapper, bubble, content) {
   bubble.innerHTML = ''; // 清除原有内容
   bubble.textContent = content;
-  // 添加复制按钮
   attachCopyHandler(bubble, content);
-  // 添加时间戳
-  const timeDiv = document.createElement('div');
-  timeDiv.className = 'text-xs text-slate-400 mt-1 text-left';
-  timeDiv.textContent = timestamp;
-  wrapper.appendChild(timeDiv);
 }
 
 function scrollToBottom() {
@@ -293,7 +276,7 @@ function scrollToBottom() {
 // 自动调整 textarea 高度
 function autoResizeTextarea() {
   messageInput.style.height = 'auto';
-  const newHeight = Math.min(messageInput.scrollHeight, 200); // 最大200px
+  const newHeight = Math.min(messageInput.scrollHeight, 200);
   messageInput.style.height = newHeight + 'px';
 }
 
@@ -314,7 +297,7 @@ function exportHistory() {
   let exportText = `小雅对话记录 - ${new Date().toLocaleString()}\n\n`;
   for (const msg of chatHistory) {
     const roleName = msg.role === 'user' ? '我' : '小雅';
-    exportText += `[${msg.timestamp}] ${roleName}：\n${msg.content}\n\n`;
+    exportText += `${roleName}：\n${msg.content}\n\n`;
   }
   const blob = new Blob([exportText], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
@@ -403,22 +386,21 @@ async function sendMessage() {
   const message = messageInput.value.trim();
   if (!message) return;
 
-  // 记录用户消息 (带时间戳)
-  const userTimestamp = getTimeString();
-  const { wrapper: userWrapper, timeStr: userTime } = createFullMessage('user', message, userTimestamp);
+  // 用户消息
+  const userWrapper = createFullMessage('user', message);
   chatLog.appendChild(userWrapper);
   scrollToBottom();
   
   conversation.push({ role: 'user', content: message });
-  chatHistory.push({ role: 'user', content: message, timestamp: userTime });
+  chatHistory.push({ role: 'user', content: message });
   
   messageInput.value = '';
-  autoResizeTextarea(); // 重置高度
+  autoResizeTextarea();
 
   isStreaming = true;
   sendBtn.disabled = true;
   
-  // 创建助手打字占位
+  // 助手打字占位
   const { wrapper: assistantWrapper, bubble: assistantBubble } = createTypingMessage();
 
   try {
@@ -448,7 +430,7 @@ async function sendMessage() {
         showDisclaimerModal();
       }
       assistantBubble.textContent = err;
-      conversation.pop(); // 移除未成功的助手回复
+      conversation.pop();
       return;
     }
 
@@ -472,11 +454,9 @@ async function sendMessage() {
       return;
     }
     
-    // 最终确定消息：添加时间戳和复制按钮
-    const assistantTimestamp = getTimeString();
-    finalizeTypingMessage(assistantWrapper, assistantBubble, finalText, assistantTimestamp);
+    finalizeTypingMessage(assistantWrapper, assistantBubble, finalText);
     conversation.push({ role: 'assistant', content: finalText });
-    chatHistory.push({ role: 'assistant', content: finalText, timestamp: assistantTimestamp });
+    chatHistory.push({ role: 'assistant', content: finalText });
     
   } catch (err) {
     assistantBubble.textContent = '请求失败: ' + (err.message || '网络错误');
@@ -520,7 +500,6 @@ messageInput.addEventListener('keydown', (e) => {
     sendMessage();
   }
 });
-// 自动增高
 messageInput.addEventListener('input', autoResizeTextarea);
 
 clearHistoryBtn.addEventListener('click', clearHistory);
