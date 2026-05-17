@@ -8,21 +8,6 @@ from typing import Optional
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
-import os
-import json
-import firebase_admin
-from firebase_admin import credentials, firestore
-
-# 从环境变量读取 JSON
-cred_json = os.environ.get("FIREBASE_CRED")
-cred_dict = json.loads(cred_json)
-
-# 初始化 Firebase
-if not firebase_admin._apps:
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-
-db = firestore.client()
 
 BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
@@ -237,21 +222,6 @@ def process_messages():
     chat_messages = build_messages(messages)
     use_streaming = should_stream_response(data)
 
-    # ==== 新增：获取 user_id 和最新用户消息 ====
-    user_id = data.get("user_id", "anonymous")
-    latest_user_message = next(
-        (m["content"] for m in reversed(messages) if m["role"] == "user"),
-        ""
-    )
-
-    # 保存用户消息到 Firebase
-    db.collection("chats").add({
-        "user_id": user_id,
-        "role": "user",
-        "content": latest_user_message,
-        "timestamp": firestore.SERVER_TIMESTAMP
-    })
-
     try:
         client = get_client()
     except Exception as exc:
@@ -261,15 +231,6 @@ def process_messages():
         try:
             result = create_completion(client, chat_messages, stream=False)
             text = (result.choices[0].message.content or "").strip()
-
-            # 保存 AI 回复到 Firebase
-            db.collection("chats").add({
-                "user_id": user_id,
-                "role": "ai",
-                "content": text,
-                "timestamp": firestore.SERVER_TIMESTAMP
-            })
-
             return Response(text, mimetype="text/plain; charset=utf-8")
         except Exception as exc:
             return jsonify({"error": map_api_error(exc)}), 500
@@ -277,22 +238,10 @@ def process_messages():
     def generate():
         try:
             stream = create_completion(client, chat_messages, stream=True)
-            buffer_text = ""
             for chunk in stream:
                 text = extract_chunk_text(chunk)
                 if text:
-                    buffer_text += text
                     yield text
-
-            # 流式结束后保存完整 AI 回复
-            if buffer_text:
-                db.collection("chats").add({
-                    "user_id": user_id,
-                    "role": "ai",
-                    "content": buffer_text,
-                    "timestamp": firestore.SERVER_TIMESTAMP
-                })
-
         except Exception as exc:
             logger.exception("Streaming error")
             yield f"\n\n[{map_api_error(exc)}]"
