@@ -95,6 +95,30 @@
     padding-bottom: 12px;
   }
 }
+
+/* 欢迎页文字动画 */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+.fade-out {
+  animation: fadeOut 0.5s ease-out forwards;
+}
 </style>
 </head>
 <body class="bg-[#fcfbfc] text-slate-800 antialiased relative h-screen overflow-hidden">
@@ -102,12 +126,20 @@
 <div class="bg-glow"></div>
 <div class="bg-glow"></div>
 
-<!-- 欢迎页 -->
+<!-- 欢迎页（带交替文字动画） -->
 <div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-fade text-center">
-<h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
-           bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 fade-in">
-  嗨👋，我是小雅！
-</h1>
+  <div class="relative h-24 md:h-32 overflow-hidden">
+    <h1 id="firstText" class="absolute inset-x-0 text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
+               bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 
+               animate-slide-in-left">
+      嗨👋，我是小雅！
+    </h1>
+    <h1 id="secondText" class="absolute inset-x-0 text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
+               bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 
+               opacity-0">
+      我们来聊聊吧！
+    </h1>
+  </div>
   <p class="mt-6 max-w-md text-slate-500"></p>
   <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
     开始对话
@@ -466,6 +498,20 @@ async function sendMessage() {
     sendBtn.disabled = !disclaimerAccepted;
     scrollToBottom();
   }
+}
+
+// ========== 欢迎页文字交替动画 ==========
+const firstText = document.getElementById('firstText');
+const secondText = document.getElementById('secondText');
+if (firstText && secondText) {
+  // 动画时序：第一句显示1.6秒（包含0.6s进入+停留1s）后淡出，然后第二句出现
+  setTimeout(() => {
+    firstText.classList.add('fade-out');
+    setTimeout(() => {
+      secondText.classList.remove('opacity-0');
+      secondText.classList.add('animate-slide-in-left');
+    }, 500); // 淡出动画0.5s结束后
+  }, 1600); // 第一句动画总时长
 }
 
 // ========== 事件绑定 ==========
