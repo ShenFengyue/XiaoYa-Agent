@@ -6,6 +6,7 @@
 <title>XiaoYa</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
+  /* 融合高级感的缓动光晕背景 */
   @keyframes float-slow {
     0%, 100% { transform: translate(0, 0) scale(1); }
     50% { transform: translate(40px, -30px) scale(1.1); }
@@ -25,15 +26,29 @@
     bottom: -10rem; right: -10rem; background: radial-gradient(circle, #a1c4fd 0%, #c2e9fb 100%);
   }
   
-  /* 平滑渐变显示 */
+  /* 渐变显示 */
   .page-transition {
-    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .page-hidden {
-    opacity: 0; pointer-events: none; transform: translateY(15px);
+    opacity: 0; pointer-events: none; transform: translateY(10px);
   }
 
-  /* 优雅的打字机等待动画 */
+  /* 原版按钮的悬浮流光效果 */
+  .fancy-btn {
+    position: relative; overflow:hidden;
+  }
+  .fancy-btn::before {
+    content:''; position:absolute;
+    top:-50%; left:-50%;
+    width:200%; height:200%;
+    background:linear-gradient(60deg,#ff7c7c,#f9d423,#7cf3ff);
+    opacity:0.4; transform:rotate(45deg) translate(-100%,-100%);
+    transition: transform 0.5s ease;
+  }
+  .fancy-btn:hover::before { transform:rotate(45deg) translate(0,0); }
+
+  /* 优雅的等待动画 */
   .typing-dot {
     animation: typing-bounce 1.4s infinite ease-in-out;
   }
@@ -44,32 +59,25 @@
     50% { transform: translateY(-6px); opacity: 1; }
   }
 
-  /* 自定义滚动条使其更隐形 */
   #chatLog::-webkit-scrollbar { width: 4px; }
   #chatLog::-webkit-scrollbar-track { background: transparent; }
   #chatLog::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
-  #chatLog::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.1); }
 </style>
 </head>
-<body class="bg-[#fcfbfc] text-neutral-800 antialiased relative h-screen overflow-hidden font-sans select-none">
+<body class="bg-[#fcfbfc] text-neutral-800 antialiased relative h-screen overflow-hidden select-none">
 
 <div class="bg-glow-1 pointer-events-none"></div>
 <div class="bg-glow-2 pointer-events-none"></div>
 
 <div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-transition">
-  <div class="text-center max-w-lg">
-    <h1 class="text-4xl md:text-5xl font-light tracking-widest text-neutral-800 mb-3">
-      你好，我是<span class="font-normal bg-clip-text text-transparent bg-gradient-to-r from-stone-800 to-neutral-500">小雅</span>
-    </h1>
-    <p class="text-sm tracking-wider text-neutral-400 font-light mb-12">在这个安静的空间里，倾听你的每一缕心绪</p>
-    
-    <button id="startBtn" type="button" class="group relative inline-flex items-center justify-center px-12 py-3.5 overflow-hidden rounded-full border border-neutral-300 bg-white/40 backdrop-blur-md text-sm font-light tracking-widest text-neutral-700 shadow-sm transition-all duration-300 hover:border-neutral-400 hover:text-neutral-900 active:scale-98">
-      <span class="relative z-10 flex items-center gap-2">
-        开启对话 
-        <svg class="w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-      </span>
-    </button>
-  </div>
+  <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
+             bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 
+             text-center">
+    你好，我是小雅！
+  </h1>
+  <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
+    开始对话
+  </button>
 </div>
 
 <div id="chatPage" class="fixed inset-0 page-transition page-hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6">
@@ -78,22 +86,19 @@
       <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
       <span class="text-sm font-medium tracking-widest text-neutral-700">小雅空间</span>
     </div>
-    <span class="text-xs text-neutral-400 font-light tracking-wide">对话将保存在本地</span>
   </div>
 
   <div id="chatLog" class="flex-1 overflow-y-auto py-8 space-y-8 pr-1"></div>
 
   <div class="pb-6 pt-2 bg-transparent">
-    <p id="inputHint" class="mb-3 text-center text-xs tracking-wide text-amber-600/80 font-light">发送前请先阅读并同意使用须知</p>
+    <p id="inputHint" class="mb-3 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
     
     <div class="relative flex items-end gap-3 bg-white/70 backdrop-blur-md border border-neutral-200/60 rounded-3xl p-2.5 shadow-sm focus-within:border-neutral-300 focus-within:shadow-md transition-all duration-300">
       <textarea id="messageInput" class="flex-1 resize-none bg-transparent pl-4 pr-2 py-2 text-[15px] leading-relaxed placeholder:text-neutral-400 outline-none disabled:text-neutral-400 max-h-32"
-        placeholder="在这里写下你的感受..." rows="1" maxlength="2000" disabled></textarea>
+        placeholder="不妨先问问小雅可以做什么" rows="1" maxlength="2000" disabled></textarea>
       
       <button id="sendBtn" type="button" class="rounded-2xl bg-neutral-800 p-3 text-white transition duration-300 hover:bg-neutral-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-400 disabled:transform-none" disabled>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9-2-9-15-9 15 9 2zm0 0v-8"></path>
-        </svg>
+        发送
       </button>
     </div>
   </div>
@@ -101,23 +106,21 @@
 
 <div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-neutral-900/20 backdrop-blur-sm p-4 page-transition opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
   <div class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white/95 backdrop-blur-md p-8 shadow-2xl border border-neutral-100 transform scale-95 transition-transform duration-300">
-    <h2 id="disclaimerTitle" class="text-base font-medium tracking-wider text-neutral-800 border-b border-neutral-100 pb-3">使用须知</h2>
-    
-    <div class="mt-5 space-y-4 text-sm leading-relaxed text-neutral-500 font-light">
-      <p><strong class="font-normal text-neutral-700">1. 服务性质</strong>：「小雅」是 AI 驱动的自我觉察与情绪梳理工具，<span class="text-neutral-700 font-normal">不能替代</span>专业的心理咨询或医疗诊断。</p>
-      <p><strong class="font-normal text-neutral-700">2. 隐私安全</strong>：数据会提交至第三方 AI 处理。请勿输入身份证、住址等极端敏感的隐私信息。</p>
-      <p><strong class="font-normal text-neutral-700">3. 危机干预</strong>：若你当前处于紧急危机状态，请立刻拨打 <span class="text-neutral-700 font-normal">110 / 120</span> 或心理援助热线 <span class="text-neutral-700 font-normal">400-161-9995</span>。小雅无法处理紧急危机。</p>
-      <p><strong class="font-normal text-neutral-700">4. 主理人</strong>：我是申哲（子期），有任何建议或合作欢迎交流（微信：Shenzhetongxue）。</p>
+    <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
+    <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
+      <p><strong>1. 服务性质</strong>：「小雅」是 AI 驱动的自我觉察与情绪梳理工具，<strong>不能替代</strong>心理咨询师、精神科医生或其他医疗专业人员，<strong>不提供</strong>疾病诊断、心理治疗、处方或紧急干预。</p>
+      <p><strong>2. 隐私与数据</strong>：您输入的内容将发送至第三方 AI 服务进行处理。请勿输入身份证号、住址、银行卡号等敏感个人信息。对话主要保存在当前浏览器中，我们无法保证绝对保密，请勿用于处理极端隐私事项。</p>
+      <p><strong>3. 危机情况</strong>：若您有自伤、伤人或立即生命危险，请<strong>立刻</strong>拨打当地紧急电话（如 <strong>110</strong>、<strong>120</strong>），或心理援助热线（如全国 24 小时心理援助热线 <strong>400-161-9995</strong>，请以当地最新公布号码为准），并联系身边可信的人。本工具不能处理紧急危机。</p>
+      <p><strong>4. 使用资格</strong>：继续使用即表示您已年满 18 周岁，或在监护人知情同意下使用，并理解上述限制。</p>
+      <p><strong>5. 个人介绍</strong>：我是申哲，你可以叫我子期，有任何问题可以添加微信：Shenzhetongxue</p>
     </div>
-    
-    <label class="mt-6 flex cursor-pointer items-start gap-3 text-xs tracking-wide text-neutral-500 select-none">
-      <input id="disclaimerCheck" type="checkbox" class="mt-0.5 h-3.5 w-3.5 rounded border-neutral-300 accent-neutral-800">
+    <label class="mt-5 flex cursor-pointer items-start gap-3 text-sm text-slate-800 select-none">
+      <input id="disclaimerCheck" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 accent-neutral-800">
       <span>我已阅读并理解上述内容，知晓本工具的能力与限制</span>
     </label>
-    
-    <div class="mt-6 flex gap-3">
-      <button id="disclaimerCancel" type="button" class="flex-1 rounded-2xl border border-neutral-200 py-3 text-sm text-neutral-500 hover:bg-neutral-50 transition">返回</button>
-      <button id="disclaimerConfirm" type="button" class="flex-1 rounded-2xl bg-neutral-800 py-3 text-sm font-medium text-white hover:bg-neutral-700 transition disabled:cursor-not-allowed disabled:bg-neutral-200" disabled>开启旅程</button>
+    <div class="mt-5 flex gap-3">
+      <button id="disclaimerCancel" type="button" class="flex-1 rounded-xl border border-slate-200 py-3 text-slate-600 hover:bg-slate-50 transition">返回</button>
+      <button id="disclaimerConfirm" type="button" class="flex-1 rounded-xl bg-slate-900 py-3 font-medium text-white hover:bg-slate-800 transition disabled:cursor-not-allowed disabled:bg-slate-400" disabled>同意并开始对话</button>
     </div>
   </div>
 </div>
@@ -142,7 +145,7 @@ let conversation = [];
 let isStreaming = false;
 let disclaimerAccepted = sessionStorage.getItem(DISCLAIMER_STORAGE_KEY) === '1';
 
-// 动态调整文本框高度以适应长文本
+// 动态调整文本框高度
 messageInput.addEventListener('input', function() {
   this.style.height = 'auto';
   this.style.height = (this.scrollHeight - 12) + 'px';
@@ -152,7 +155,7 @@ function setInputEnabled(enabled) {
   messageInput.disabled = !enabled;
   sendBtn.disabled = !enabled || isStreaming;
   inputHint.classList.toggle('hidden', enabled);
-  messageInput.placeholder = enabled ? "写下你此刻真实的感受..." : "请先同意使用须知";
+  messageInput.placeholder = enabled ? '不妨先问问小雅可以做什么' : '请先同意使用须知';
 }
 
 function showDisclaimerModal() {
@@ -188,7 +191,6 @@ function ensureDisclaimerBeforeSend() {
   return false;
 }
 
-// 页面平滑切换
 function switchPage(from, to) {
   from.classList.add('page-hidden');
   setTimeout(() => {
@@ -236,12 +238,10 @@ function scrollToBottom() {
 
 function createMessage(role, content, isTyping = false) {
   const wrapper = document.createElement('div');
-  // 呼吸感布局：用户靠右，AI靠左
   wrapper.className = 'flex w-full opacity-0 translate-y-3 transition-all duration-500 ' + 
     (role === 'user' ? 'justify-end' : 'justify-start');
 
   const msg = document.createElement('div');
-  // 极其轻量精致的气泡样式
   msg.className = 'max-w-[85%] md:max-w-[75%] px-5 py-3.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap tracking-wide ' +
     (role === 'user' 
       ? 'bg-neutral-800 text-neutral-100 rounded-3xl rounded-tr-sm shadow-sm' 
@@ -261,7 +261,6 @@ function createMessage(role, content, isTyping = false) {
   wrapper.appendChild(msg);
   chatLog.appendChild(wrapper);
   
-  // 触发渐入动画
   setTimeout(() => {
     wrapper.classList.remove('opacity-0', 'translate-y-3');
   }, 50);
@@ -296,7 +295,7 @@ async function sendMessage() {
   conversation.push({ role: 'user', content: message });
   createMessage('user', message);
   messageInput.value = '';
-  messageInput.style.height = 'auto'; // 重置高度
+  messageInput.style.height = 'auto';
 
   isStreaming = true;
   sendBtn.disabled = true;
@@ -315,7 +314,7 @@ async function sendMessage() {
     });
 
     if (!response.ok) {
-      let err = '系统出了一点小状况，请稍后再试。';
+      let err = '请求失败';
       try { const d = await response.json(); err = d.error || err; } catch { err = (await response.text()) || err; }
       if (response.status === 403) {
         disclaimerAccepted = false;
@@ -345,7 +344,7 @@ async function sendMessage() {
     });
     const finalText = fullText.trim();
     if (!finalText) {
-      typingMsg.msg.textContent = '小雅刚刚走神了，可以再对我说一次吗？';
+      typingMsg.msg.textContent = '未收到回复，请稍后再试';
       conversation.pop();
       return;
     }
@@ -353,7 +352,7 @@ async function sendMessage() {
     conversation.push({ role: 'assistant', content: finalText });
   } catch (err) {
     typingMsg.msg.className = 'max-w-[85%] px-5 py-3.5 text-sm bg-red-50 text-red-600 rounded-2xl border border-red-100';
-    typingMsg.msg.textContent = '网络似乎断开了：' + (err.message || '错误');
+    typingMsg.msg.textContent = '请求失败: ' + (err.message || '网络错误');
     conversation.pop();
   } finally {
     isStreaming = false;
