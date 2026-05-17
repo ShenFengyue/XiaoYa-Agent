@@ -84,6 +84,13 @@
 </div>
 
 <script>
+  // 浏览器端生成唯一 user_id
+let user_id = localStorage.getItem("xiaoya_user_id");
+if (!user_id) {
+  user_id = crypto.randomUUID();  // 随机生成 UUID
+  localStorage.setItem("xiaoya_user_id", user_id);
+}
+  
 const DISCLAIMER_VERSION = {{ disclaimer_version | tojson }};
 const DISCLAIMER_STORAGE_KEY = 'xiaoya_disclaimer_' + DISCLAIMER_VERSION;
 
@@ -229,6 +236,7 @@ async function sendMessage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        user_id: user_id,    
         messages: conversation,
         stream: true,
         disclaimer_acknowledged: true,
