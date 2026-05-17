@@ -2,10 +2,16 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>XiaoYa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+<title>XiaoYa - 小雅空间</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
+/* 全局禁止横向滚动 */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100%;
+}
+
 @keyframes float {
   0%,100% { transform: translate(0,0); }
   50% { transform: translate(20px,20px); }
@@ -15,6 +21,7 @@
   width:30rem; height:30rem;
   border-radius:50%; filter:blur(140px);
   opacity:0.3; animation:float 10s ease-in-out infinite alternate;
+  pointer-events: none; /* 避免干扰点击 */
 }
 .bg-glow:nth-child(1){ top:-8rem; left:-6rem; background:#ff7c7c; }
 .bg-glow:nth-child(2){ bottom:-8rem; right:-6rem; background:#7cf3ff; }
@@ -48,9 +55,10 @@
   transform: translateY(8px);
 }
 
-/* 消息气泡复制按钮 (hover显示，移动端点击显示) */
+/* 消息气泡复制按钮 */
 .message-bubble {
   position: relative;
+  word-break: break-word; /* 强制长单词换行 */
 }
 .copy-btn {
   position: absolute;
@@ -70,7 +78,6 @@
 .message-bubble:active .copy-btn {
   opacity: 1;
 }
-/* 用户消息深色背景下的复制按钮颜色 */
 .bg-slate-900 .copy-btn {
   color: #ddd;
   background: rgba(255,255,255,0.2);
@@ -81,18 +88,28 @@
   overflow-y: hidden;
   transition: height 0.1s ease;
 }
-/* 移动端优化：输入区域更舒适 */
+
+/* 手机端专属优化：增大气泡最大宽度，减小外边距 */
 @media (max-width: 640px) {
   .copy-btn {
     padding: 6px 10px;
     font-size: 13px;
   }
   .message-bubble {
-    max-width: 90% !important;
+    max-width: 85% !important;  /* 从80%增加到85% */
   }
-  #chatPage .py-4 {
-    padding-top: 12px;
-    padding-bottom: 12px;
+  #chatPage .px-4 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  #chatLog {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .bg-glow {
+    width: 20rem;
+    height: 20rem;
+    filter: blur(100px);
   }
 }
 </style>
@@ -115,20 +132,18 @@
 </div>
 
 <!-- 聊天主界面 -->
-<div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6 page-fade page-hide">
+<div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6 page-fade page-hide w-full">
   <div class="py-4 border-b border-slate-100 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-      <span class="text-sm font-medium text-slate-600">青山小雅</span>
+      <span class="text-sm font-medium text-slate-600">小雅空间</span>
     </div>
     <div class="flex gap-3">
-      <!-- 清除对话按钮 -->
       <button id="clearHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-1" title="清除对话">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       </button>
-      <!-- 导出对话按钮 -->
       <button id="exportHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-1" title="导出对话记录">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -137,7 +152,7 @@
     </div>
   </div>
 
-  <div id="chatLog" class="flex-1 overflow-y-auto py-6 space-y-6 bg-transparent"></div>
+  <div id="chatLog" class="flex-1 overflow-y-auto py-6 space-y-6 bg-transparent w-full"></div>
   
   <div class="pb-6 pt-2 bg-transparent">
     <p id="inputHint" class="mb-2 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
@@ -155,7 +170,7 @@
   </div>
 </div>
 
-<!-- 免责模态框 -->
+<!-- 免责模态框（未改动） -->
 <div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 p-4 page-fade opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
     <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
@@ -197,21 +212,20 @@ const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 const exportHistoryBtn = document.getElementById('exportHistoryBtn');
 
 // 数据
-let conversation = [];            // 用于 API 的消息列表 {role, content}
-let chatHistory = [];            // 存储完整记录 {role, content}
+let conversation = [];
+let chatHistory = [];
 let isStreaming = false;
 let disclaimerAccepted = sessionStorage.getItem(DISCLAIMER_STORAGE_KEY) === '1';
 
-// ========== 辅助函数 ==========
+// 辅助函数
 function showToast(msg, duration = 2000) {
   const toast = document.createElement('div');
-  toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm z-50 shadow-lg';
+  toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm z-50 shadow-lg whitespace-nowrap';
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), duration);
 }
 
-// 复制消息内容
 function attachCopyHandler(bubbleElement, contentText) {
   const copyBtn = document.createElement('button');
   copyBtn.className = 'copy-btn';
@@ -220,38 +234,33 @@ function attachCopyHandler(bubbleElement, contentText) {
   copyBtn.onclick = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(contentText).then(() => {
-      showToast('已复制到剪贴板', 1000);
-    }).catch(() => showToast('复制失败', 1000));
+      showToast('已复制', 800);
+    }).catch(() => showToast('复制失败', 800));
   };
   bubbleElement.appendChild(copyBtn);
 }
 
-// 创建完整消息 (带复制按钮，无时间戳)
 function createFullMessage(role, content) {
   const wrapper = document.createElement('div');
   wrapper.className = 'mb-6 flex w-full ' + (role === 'user' ? 'justify-end' : 'justify-start');
   
   const bubble = document.createElement('div');
-  bubble.className = `message-bubble max-w-[80%] px-5 py-3.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm relative ${
+  bubble.className = `message-bubble max-w-[80%] md:max-w-[70%] px-5 py-3.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm relative ${
     role === 'user' 
       ? 'bg-slate-900 text-white rounded-2xl rounded-tr-sm' 
       : 'bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm'
   }`;
   bubble.textContent = content;
   wrapper.appendChild(bubble);
-  
-  // 复制按钮
   attachCopyHandler(bubble, content);
-  
   return wrapper;
 }
 
-// 创建打字中的临时消息 (无复制按钮)
 function createTypingMessage() {
   const wrapper = document.createElement('div');
   wrapper.className = 'mb-6 flex w-full justify-start';
   const bubble = document.createElement('div');
-  bubble.className = 'message-bubble max-w-[80%] px-5 py-3.5 text-[15px] leading-relaxed bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm';
+  bubble.className = 'message-bubble max-w-[80%] md:max-w-[70%] px-5 py-3.5 text-[15px] leading-relaxed bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm';
   const typingSpan = document.createElement('span');
   typingSpan.className = 'animate-pulse text-slate-400 text-sm';
   typingSpan.textContent = '思考中...';
@@ -262,9 +271,8 @@ function createTypingMessage() {
   return { wrapper, bubble };
 }
 
-// 将打字消息转换为最终消息 (添加内容、复制按钮)
 function finalizeTypingMessage(wrapper, bubble, content) {
-  bubble.innerHTML = ''; // 清除原有内容
+  bubble.innerHTML = '';
   bubble.textContent = content;
   attachCopyHandler(bubble, content);
 }
@@ -273,16 +281,14 @@ function scrollToBottom() {
   if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-// 自动调整 textarea 高度
 function autoResizeTextarea() {
   messageInput.style.height = 'auto';
   const newHeight = Math.min(messageInput.scrollHeight, 200);
   messageInput.style.height = newHeight + 'px';
 }
 
-// ========== 对话历史管理 ==========
 function clearHistory() {
-  if (!confirm('确定要清除所有对话记录吗？')) return;
+  if (!confirm('确定清除所有对话吗？')) return;
   chatLog.innerHTML = '';
   conversation = [];
   chatHistory = [];
@@ -291,7 +297,7 @@ function clearHistory() {
 
 function exportHistory() {
   if (chatHistory.length === 0) {
-    showToast('暂无对话记录可导出', 1000);
+    showToast('暂无对话记录', 1000);
     return;
   }
   let exportText = `小雅对话记录 - ${new Date().toLocaleString()}\n\n`;
@@ -309,7 +315,6 @@ function exportHistory() {
   showToast('导出成功', 1000);
 }
 
-// ========== 免责与页面逻辑 ==========
 function setInputEnabled(enabled) {
   messageInput.disabled = !enabled;
   sendBtn.disabled = !enabled || isStreaming;
@@ -362,7 +367,6 @@ function switchPage(fromPage, toPage, callback) {
   }, 400);
 }
 
-// ========== 网络请求与消息发送 ==========
 async function readAssistantResponse(response, onChunk) {
   if (!response.body) {
     onChunk(await response.text());
@@ -386,7 +390,6 @@ async function sendMessage() {
   const message = messageInput.value.trim();
   if (!message) return;
 
-  // 用户消息
   const userWrapper = createFullMessage('user', message);
   chatLog.appendChild(userWrapper);
   scrollToBottom();
@@ -399,8 +402,6 @@ async function sendMessage() {
 
   isStreaming = true;
   sendBtn.disabled = true;
-  
-  // 助手打字占位
   const { wrapper: assistantWrapper, bubble: assistantBubble } = createTypingMessage();
 
   try {
@@ -457,7 +458,6 @@ async function sendMessage() {
     finalizeTypingMessage(assistantWrapper, assistantBubble, finalText);
     conversation.push({ role: 'assistant', content: finalText });
     chatHistory.push({ role: 'assistant', content: finalText });
-    
   } catch (err) {
     assistantBubble.textContent = '请求失败: ' + (err.message || '网络错误');
     conversation.pop();
@@ -468,7 +468,7 @@ async function sendMessage() {
   }
 }
 
-// ========== 事件绑定 ==========
+// 事件绑定
 startBtn.addEventListener('click', () => {
   switchPage(welcomePage, chatPage, () => {
     if (disclaimerAccepted) {
