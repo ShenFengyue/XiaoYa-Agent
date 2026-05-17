@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XiaoYa</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@keyframes float {
+  0%,100% { transform: translate(0,0); }
+  50% { transform: translate(20px,20px); }
+}
+.bg-glow {
+  position:absolute;
+  width:30rem; height:30rem;
+  border-radius:50%; filter:blur(140px);
+  opacity:0.3; animation:float 10s ease-in-out infinite alternate;
+}
+.bg-glow:nth-child(1){ top:-8rem; left:-6rem; background:#ff7c7c; }
+.bg-glow:nth-child(2){ bottom:-8rem; right:-6rem; background:#7cf3ff; }
+.fade-in { opacity:0; animation:fadeIn 2s forwards; }
+@keyframes fadeIn { to { opacity:1; } }
+.fancy-btn {
+  position: relative; overflow:hidden;
+}
+.fancy-btn::before {
+  content:''; position:absolute;
+  top:-50%; left:-50%;
+  width:200%; height:200%;
+  background:linear-gradient(60deg,#ff7c7c,#f9d423,#7cf3ff);
+  opacity:0.4; transform:rotate(45deg) translate(-100%,-100%);
+  transition: transform 0.5s ease;
+}
+.fancy-btn:hover::before { transform:rotate(45deg) translate(0,0); }
+
+/* 滚动条 */
+#chatLog::-webkit-scrollbar { width: 4px; }
+#chatLog::-webkit-scrollbar-track { background: transparent; }
+#chatLog::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+
+/* 页面过渡 */
+.page-fade {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.page-hide {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+}
+
+/* 消息气泡复制按钮 (hover显示，移动端点击显示) */
+.message-bubble {
+  position: relative;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  background: rgba(0,0,0,0.1);
+  border-radius: 20px;
+  padding: 4px 8px;
+  font-size: 12px;
+  backdrop-filter: blur(4px);
+  color: #333;
+}
+.message-bubble:hover .copy-btn,
+.message-bubble:active .copy-btn {
+  opacity: 1;
+}
+/* 用户消息深色背景下的复制按钮颜色 */
+.bg-slate-900 .copy-btn {
+  color: #ddd;
+  background: rgba(255,255,255,0.2);
+}
+
+/* 自动增高textarea */
+.auto-textarea {
+  overflow-y: hidden;
+  transition: height 0.1s ease;
+}
+/* 移动端优化：输入区域更舒适 */
+@media (max-width: 640px) {
+  .copy-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .message-bubble {
+    max-width: 90% !important;
+  }
+  #chatPage .py-4 {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+</style>
+</head>
+<body class="bg-[#fcfbfc] text-slate-800 antialiased relative h-screen overflow-hidden">
+
+<div class="bg-glow"></div>
+<div class="bg-glow"></div>
+
+<!-- 欢迎页 -->
+<div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-fade text-center">
+<h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
+           bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 fade-in">
+  嗨👋，我是小雅！
+</h1>
+  <p class="mt-6 max-w-md text-slate-500"></p>
+  <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
+    开始对话
+  </button>
+</div>
+
+<!-- 聊天主界面 -->
+<div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6 page-fade page-hide">
+  <div class="py-4 border-b border-slate-100 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+      <span class="text-sm font-medium text-slate-600">青山小雅</span>
+    </div>
+    <div class="flex gap-3">
+      <!-- 清除对话按钮 -->
+      <button id="clearHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-1" title="清除对话">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
+      <!-- 导出对话按钮 -->
+      <button id="exportHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-1" title="导出对话记录">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="chatLog" class="flex-1 overflow-y-auto py-6 space-y-6 bg-transparent"></div>
+  
+  <div class="pb-6 pt-2 bg-transparent">
+    <p id="inputHint" class="mb-2 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
+    
+    <div class="relative flex items-end gap-3 bg-white/80 backdrop-blur-md border border-slate-200/80 rounded-3xl p-2.5 shadow-sm focus-within:border-slate-300 focus-within:shadow-md transition-all duration-300">
+      <textarea id="messageInput" class="auto-textarea flex-1 resize-none bg-transparent pl-4 pr-2 py-2 text-[15px] placeholder:text-slate-400 outline-none disabled:text-slate-400"
+        placeholder="不妨先问问小雅可以做什么" rows="1" maxlength="2000" disabled></textarea>
+      
+      <button id="sendBtn" type="button" class="rounded-2xl bg-slate-900 p-3 text-white transition duration-300 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:transform-none" aria-label="发送">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 19l9-2-9-15-9 15 9 2zm0 0v-8"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 免责模态框 -->
+<div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 p-4 page-fade opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
+  <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+    <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
+    <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
+      <p><strong>1. 服务性质</strong>：「小雅」是 AI 驱动的自我觉察与情绪梳理工具，<strong>不能替代</strong>心理咨询师、精神科医生或其他医疗专业人员，<strong>不提供</strong>疾病诊断、心理治疗、处方或紧急干预。</p>
+      <p><strong>2. 隐私与数据</strong>：您输入的内容将发送至第三方 AI 服务进行处理。请勿输入身份证号、住址、银行卡号等敏感个人信息。对话主要保存在当前浏览器中，我们无法保证绝对保密，请勿用于处理极端隐私事项。</p>
+      <p><strong>3. 危机情况</strong>：若您有自伤、伤人或立即生命危险，请<strong>立刻</strong>拨打当地紧急电话（如 <strong>110</strong>、<strong>120</strong>），或心理援助热线（如全国 24 小时心理援助热线 <strong>400-161-9995</strong>，请以当地最新公布号码为准），并联系身边可信的人。本工具不能处理紧急危机。</p>
+      <p><strong>4. 使用资格</strong>：继续使用即表示您已年满 18 周岁，或在监护人知情同意下使用，并理解上述限制。</p>
+      <p><strong>5. 自我介绍</strong>：我是申哲（子期），如果你有任何问题或建议，这是我的微信：Shenzhetongxue</p>
+    </div>
+    <label class="mt-5 flex cursor-pointer items-start gap-3 text-sm text-slate-800 select-none">
+      <input id="disclaimerCheck" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300">
+      <span>我已阅读并理解上述内容，知晓本工具的能力与限制</span>
+    </label>
+    <div class="mt-5 flex gap-3">
+      <button id="disclaimerCancel" type="button" class="flex-1 rounded-xl border border-slate-200 py-3 text-slate-600 hover:bg-slate-50">返回</button>
+      <button id="disclaimerConfirm" type="button" class="flex-1 rounded-xl bg-slate-900 py-3 font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400" disabled>同意并开始对话</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DISCLAIMER_VERSION = {{ disclaimer_version | tojson }};
+const DISCLAIMER_STORAGE_KEY = 'xiaoya_disclaimer_' + DISCLAIMER_VERSION;
+
+// DOM 元素
+const welcomePage = document.getElementById('welcomePage');
+const chatPage = document.getElementById('chatPage');
+const startBtn = document.getElementById('startBtn');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const chatLog = document.getElementById('chatLog');
+const inputHint = document.getElementById('inputHint');
+const disclaimerModal = document.getElementById('disclaimerModal');
+const disclaimerCheck = document.getElementById('disclaimerCheck');
+const disclaimerConfirm = document.getElementById('disclaimerConfirm');
+const disclaimerCancel = document.getElementById('disclaimerCancel');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+const exportHistoryBtn = document.getElementById('exportHistoryBtn');
+
+// 数据
+let conversation = [];            // 用于 API 的消息列表 {role, content}
+let chatHistory = [];            // 存储完整记录 {role, content}
+let isStreaming = false;
+let disclaimerAccepted = sessionStorage.getItem(DISCLAIMER_STORAGE_KEY) === '1';
+
+// ========== 辅助函数 ==========
+function showToast(msg, duration = 2000) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm z-50 shadow-lg';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), duration);
+}
+
+// 复制消息内容
+function attachCopyHandler(bubbleElement, contentText) {
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.innerHTML = '复制';
+  copyBtn.title = '复制内容';
+  copyBtn.onclick = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(contentText).then(() => {
+      showToast('已复制到剪贴板', 1000);
+    }).catch(() => showToast('复制失败', 1000));
+  };
+  bubbleElement.appendChild(copyBtn);
+}
+
+// 创建完整消息 (带复制按钮，无时间戳)
+function createFullMessage(role, content) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'mb-6 flex w-full ' + (role === 'user' ? 'justify-end' : 'justify-start');
+  
+  const bubble = document.createElement('div');
+  bubble.className = `message-bubble max-w-[80%] px-5 py-3.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm relative ${
+    role === 'user' 
+      ? 'bg-slate-900 text-white rounded-2xl rounded-tr-sm' 
+      : 'bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm'
+  }`;
+  bubble.textContent = content;
+  wrapper.appendChild(bubble);
+  
+  // 复制按钮
+  attachCopyHandler(bubble, content);
+  
+  return wrapper;
+}
+
+// 创建打字中的临时消息 (无复制按钮)
+function createTypingMessage() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'mb-6 flex w-full justify-start';
+  const bubble = document.createElement('div');
+  bubble.className = 'message-bubble max-w-[80%] px-5 py-3.5 text-[15px] leading-relaxed bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm';
+  const typingSpan = document.createElement('span');
+  typingSpan.className = 'animate-pulse text-slate-400 text-sm';
+  typingSpan.textContent = '思考中...';
+  bubble.appendChild(typingSpan);
+  wrapper.appendChild(bubble);
+  chatLog.appendChild(wrapper);
+  scrollToBottom();
+  return { wrapper, bubble };
+}
+
+// 将打字消息转换为最终消息 (添加内容、复制按钮)
+function finalizeTypingMessage(wrapper, bubble, content) {
+  bubble.innerHTML = ''; // 清除原有内容
+  bubble.textContent = content;
+  attachCopyHandler(bubble, content);
+}
+
+function scrollToBottom() {
+  if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// 自动调整 textarea 高度
+function autoResizeTextarea() {
+  messageInput.style.height = 'auto';
+  const newHeight = Math.min(messageInput.scrollHeight, 200);
+  messageInput.style.height = newHeight + 'px';
+}
+
+// ========== 对话历史管理 ==========
+function clearHistory() {
+  if (!confirm('确定要清除所有对话记录吗？')) return;
+  chatLog.innerHTML = '';
+  conversation = [];
+  chatHistory = [];
+  showToast('对话已清空', 1000);
+}
+
+function exportHistory() {
+  if (chatHistory.length === 0) {
+    showToast('暂无对话记录可导出', 1000);
+    return;
+  }
+  let exportText = `小雅对话记录 - ${new Date().toLocaleString()}\n\n`;
+  for (const msg of chatHistory) {
+    const roleName = msg.role === 'user' ? '我' : '小雅';
+    exportText += `${roleName}：\n${msg.content}\n\n`;
+  }
+  const blob = new Blob([exportText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `xiaoya_chat_${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('导出成功', 1000);
+}
+
+// ========== 免责与页面逻辑 ==========
+function setInputEnabled(enabled) {
+  messageInput.disabled = !enabled;
+  sendBtn.disabled = !enabled || isStreaming;
+  inputHint.classList.toggle('hidden', enabled);
+  messageInput.placeholder = enabled ? '不妨先问问小雅可以做什么' : '请先同意使用须知';
+  if (enabled) autoResizeTextarea();
+}
+
+function showDisclaimerModal() {
+  disclaimerCheck.checked = false;
+  disclaimerConfirm.disabled = true;
+  disclaimerModal.classList.remove('hidden');
+  disclaimerModal.classList.add('flex');
+  requestAnimationFrame(() => {
+    disclaimerModal.classList.remove('opacity-0');
+  });
+}
+
+function hideDisclaimerModal() {
+  disclaimerModal.classList.add('opacity-0');
+  setTimeout(() => {
+    disclaimerModal.classList.add('hidden');
+    disclaimerModal.classList.remove('flex');
+  }, 400);
+}
+
+function acceptDisclaimer() {
+  disclaimerAccepted = true;
+  sessionStorage.setItem(DISCLAIMER_STORAGE_KEY, '1');
+  hideDisclaimerModal();
+  setInputEnabled(true);
+  messageInput.focus();
+}
+
+function ensureDisclaimerBeforeSend() {
+  if (disclaimerAccepted) return true;
+  showDisclaimerModal();
+  return false;
+}
+
+function switchPage(fromPage, toPage, callback) {
+  fromPage.classList.add('page-hide');
+  setTimeout(() => {
+    fromPage.classList.add('hidden');
+    toPage.classList.remove('hidden');
+    setTimeout(() => {
+      toPage.classList.remove('page-hide');
+      if (callback) callback();
+    }, 50);
+  }, 400);
+}
+
+// ========== 网络请求与消息发送 ==========
+async function readAssistantResponse(response, onChunk) {
+  if (!response.body) {
+    onChunk(await response.text());
+    return;
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    onChunk(decoder.decode(value, { stream: true }));
+  }
+  const tail = decoder.decode();
+  if (tail) onChunk(tail);
+}
+
+async function sendMessage() {
+  if (isStreaming) return;
+  if (!ensureDisclaimerBeforeSend()) return;
+
+  const message = messageInput.value.trim();
+  if (!message) return;
+
+  // 用户消息
+  const userWrapper = createFullMessage('user', message);
+  chatLog.appendChild(userWrapper);
+  scrollToBottom();
+  
+  conversation.push({ role: 'user', content: message });
+  chatHistory.push({ role: 'user', content: message });
+  
+  messageInput.value = '';
+  autoResizeTextarea();
+
+  isStreaming = true;
+  sendBtn.disabled = true;
+  
+  // 助手打字占位
+  const { wrapper: assistantWrapper, bubble: assistantBubble } = createTypingMessage();
+
+  try {
+    const response = await fetch('/api/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: conversation,
+        stream: true,
+        disclaimer_acknowledged: true,
+        disclaimer_version: DISCLAIMER_VERSION,
+      }),
+    });
+
+    if (!response.ok) {
+      let err = '请求失败';
+      try {
+        const d = await response.json();
+        err = d.error || err;
+      } catch {
+        err = (await response.text()) || err;
+      }
+      if (response.status === 403) {
+        disclaimerAccepted = false;
+        sessionStorage.removeItem(DISCLAIMER_STORAGE_KEY);
+        setInputEnabled(false);
+        showDisclaimerModal();
+      }
+      assistantBubble.textContent = err;
+      conversation.pop();
+      return;
+    }
+
+    let fullText = '';
+    let receivedChunk = false;
+    await readAssistantResponse(response, (chunk) => {
+      if (!chunk) return;
+      if (!receivedChunk) {
+        assistantBubble.innerHTML = '';
+        receivedChunk = true;
+      }
+      fullText += chunk;
+      assistantBubble.textContent = fullText;
+      scrollToBottom();
+    });
+    
+    const finalText = fullText.trim();
+    if (!finalText) {
+      assistantBubble.textContent = '未收到回复，请稍后再试';
+      conversation.pop();
+      return;
+    }
+    
+    finalizeTypingMessage(assistantWrapper, assistantBubble, finalText);
+    conversation.push({ role: 'assistant', content: finalText });
+    chatHistory.push({ role: 'assistant', content: finalText });
+    
+  } catch (err) {
+    assistantBubble.textContent = '请求失败: ' + (err.message || '网络错误');
+    conversation.pop();
+  } finally {
+    isStreaming = false;
+    sendBtn.disabled = !disclaimerAccepted;
+    scrollToBottom();
+  }
+}
+
+// ========== 事件绑定 ==========
+startBtn.addEventListener('click', () => {
+  switchPage(welcomePage, chatPage, () => {
+    if (disclaimerAccepted) {
+      setInputEnabled(true);
+      messageInput.focus();
+    } else {
+      setInputEnabled(false);
+      showDisclaimerModal();
+    }
+  });
+});
+
+disclaimerCheck.addEventListener('change', () => {
+  disclaimerConfirm.disabled = !disclaimerCheck.checked;
+});
+disclaimerConfirm.addEventListener('click', () => {
+  if (!disclaimerCheck.checked) return;
+  acceptDisclaimer();
+});
+disclaimerCancel.addEventListener('click', () => {
+  hideDisclaimerModal();
+  switchPage(chatPage, welcomePage);
+});
+
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+messageInput.addEventListener('input', autoResizeTextarea);
+
+clearHistoryBtn.addEventListener('click', clearHistory);
+exportHistoryBtn.addEventListener('click', exportHistory);
+</script>
+</body>
+</html>
