@@ -54,20 +54,20 @@
 <div class="bg-glow"></div>
 <div class="bg-glow"></div>
 
+<!-- 欢迎页 -->
 <div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-fade text-center">
 <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
            bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 
            fade-in">
   你好，我是小雅！
 </h1>
-  <p class="mt-6 max-w-md text-slate-500">
-  
-  </p>
+  <p class="mt-6 max-w-md text-slate-500"></p>
   <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
     开始对话
   </button>
 </div>
 
+<!-- 聊天页 -->
 <div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6 page-fade page-hide">
   <div class="py-4 border-b border-slate-100 flex items-center justify-between">
     <div class="flex items-center gap-2">
@@ -94,6 +94,7 @@
   </div>
 </div>
 
+<!-- 使用须知 modal -->
 <div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 p-4 page-fade opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
   <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
     <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
@@ -116,7 +117,7 @@
 </div>
 
 <script>
-const DISCLAIMER_VERSION = {{ disclaimer_version | tojson }};
+const DISCLAIMER_VERSION = 1; // 固定版本号
 const DISCLAIMER_STORAGE_KEY = 'xiaoya_disclaimer_' + DISCLAIMER_VERSION;
 
 const welcomePage = document.getElementById('welcomePage');
@@ -126,6 +127,7 @@ const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const chatLog = document.getElementById('chatLog');
 const inputHint = document.getElementById('inputHint');
+
 const disclaimerModal = document.getElementById('disclaimerModal');
 const disclaimerCheck = document.getElementById('disclaimerCheck');
 const disclaimerConfirm = document.getElementById('disclaimerConfirm');
@@ -147,10 +149,7 @@ function showDisclaimerModal() {
   disclaimerConfirm.disabled = true;
   disclaimerModal.classList.remove('hidden');
   disclaimerModal.classList.add('flex');
-  // 延迟触发动画以确保透明度正常渐现
-  setTimeout(() => {
-    disclaimerModal.classList.remove('opacity-0');
-  }, 20);
+  setTimeout(() => disclaimerModal.classList.remove('opacity-0'), 20);
 }
 
 function hideDisclaimerModal() {
@@ -175,7 +174,6 @@ function ensureDisclaimerBeforeSend() {
   return false;
 }
 
-// 优雅过渡的页面切换函数
 function switchPage(fromPage, toPage, callback) {
   fromPage.classList.add('page-hide');
   setTimeout(() => {
@@ -189,14 +187,13 @@ function switchPage(fromPage, toPage, callback) {
 }
 
 startBtn.addEventListener('click', () => {
+  if (!disclaimerAccepted) {
+    showDisclaimerModal();
+    return;
+  }
   switchPage(welcomePage, chatPage, () => {
-    if (disclaimerAccepted) {
-      setInputEnabled(true);
-      messageInput.focus();
-    } else {
-      setInputEnabled(false);
-      showDisclaimerModal();
-    }
+    setInputEnabled(true);
+    messageInput.focus();
   });
 });
 
@@ -207,6 +204,10 @@ disclaimerCheck.addEventListener('change', () => {
 disclaimerConfirm.addEventListener('click', () => {
   if (!disclaimerCheck.checked) return;
   acceptDisclaimer();
+  switchPage(welcomePage, chatPage, () => {
+    setInputEnabled(true);
+    messageInput.focus();
+  });
 });
 
 disclaimerCancel.addEventListener('click', () => {
@@ -241,25 +242,6 @@ function createMessage(role, content, isTyping = false) {
   chatLog.appendChild(wrapper);
   scrollToBottom();
   return { wrapper, msg };
-}
-
-async function readAssistantResponse(response, onChunk) {
-  if (!response.body) {
-    onChunk(await response.text());
-    return;
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    onChunk(decoder.decode(value, { stream: true }));
-  }
-
-  const tail = decoder.decode();
-  if (tail) onChunk(tail);
 }
 
 async function sendMessage() {
@@ -297,22 +279,21 @@ async function sendMessage() {
       } catch {
         err = (await response.text()) || err;
       }
-      if (response.status === 403) {
-        disclaimerAccepted = false;
-        sessionStorage.removeItem(DISCLAIMER_STORAGE_KEY);
-        setInputEnabled(false);
-        showDisclaimerModal();
-      }
       typingMsg.msg.textContent = err;
       conversation.pop();
       return;
     }
 
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
     let fullText = '';
     let receivedChunk = false;
 
-    await readAssistantResponse(response, (chunk) => {
-      if (!chunk) return;
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      if (!chunk) continue;
       if (!receivedChunk) {
         typingMsg.msg.textContent = '';
         receivedChunk = true;
@@ -320,15 +301,22 @@ async function sendMessage() {
       fullText += chunk;
       typingMsg.msg.textContent = fullText;
       scrollToBottom();
-    });
-    const finalText = fullText.trim();
-    if (!finalText) {
+    }
+
+    const tail = decoder.decode();
+    if (tail) {
+      fullText += tail;
+      typingMsg.msg.textContent = fullText;
+    }
+
+    if (!fullText.trim()) {
       typingMsg.msg.textContent = '未收到回复，请稍后再试';
       conversation.pop();
       return;
     }
-    typingMsg.msg.textContent = finalText;
-    conversation.push({ role: 'assistant', content: finalText });
+
+    conversation.push({ role: 'assistant', content: fullText.trim() });
+
   } catch (err) {
     typingMsg.msg.textContent = '请求失败: ' + (err.message || '网络错误');
     conversation.pop();
@@ -345,6 +333,13 @@ messageInput.addEventListener('keydown', (e) => {
     sendMessage();
   }
 });
+
+// 页面初始化
+if (!disclaimerAccepted) {
+  setInputEnabled(false);
+} else {
+  setInputEnabled(true);
+}
 </script>
 </body>
 </html>
