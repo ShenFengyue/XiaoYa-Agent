@@ -8,6 +8,21 @@ from typing import Optional
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
+import os
+import json
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# 从环境变量读取 JSON
+cred_json = os.environ.get("FIREBASE_CRED")
+cred_dict = json.loads(cred_json)
+
+# 初始化 Firebase
+if not firebase_admin._apps:
+    cred = credentials.Certificate(cred_dict)
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
