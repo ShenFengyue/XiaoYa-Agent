@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>XiaoYa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XiaoYa - 小雅空间</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @keyframes float {
@@ -48,7 +48,7 @@
   transform: translateY(8px);
 }
 
-/* 消息气泡 - 移动端复制按钮始终可见或更大点击区域 */
+/* 消息气泡复制按钮 (hover显示) */
 .message-bubble {
   position: relative;
 }
@@ -56,52 +56,29 @@
   position: absolute;
   top: 8px;
   right: 12px;
-  opacity: 0.6;
+  opacity: 0;
   transition: opacity 0.2s;
   cursor: pointer;
-  background: rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.1);
   border-radius: 20px;
-  padding: 4px 10px;
+  padding: 4px 8px;
   font-size: 12px;
   backdrop-filter: blur(4px);
   color: #333;
-  /* 移动端增加触摸区域 */
-  min-width: 44px;
-  text-align: center;
 }
-/* 平板/桌面 hover 时全显，移动端默认半透明 */
-@media (hover: hover) and (pointer: fine) {
-  .copy-btn {
-    opacity: 0;
-  }
-  .message-bubble:hover .copy-btn {
-    opacity: 0.7;
-  }
+.message-bubble:hover .copy-btn {
+  opacity: 1;
 }
-/* 触摸设备上复制按钮稍微明显且增大点击区 */
-@media (hover: none) and (pointer: coarse) {
-  .copy-btn {
-    opacity: 0.5;
-    padding: 6px 12px;
-    background: rgba(0,0,0,0.15);
-  }
-}
+/* 用户消息深色背景下的复制按钮颜色 */
 .bg-slate-900 .copy-btn {
-  color: #eee;
+  color: #ddd;
   background: rgba(255,255,255,0.2);
 }
-/* 移动端气泡内文字适当放大触摸目标 */
-.message-bubble {
-  word-break: break-word;
-}
+
 /* 自动增高textarea */
 .auto-textarea {
   overflow-y: hidden;
   transition: height 0.1s ease;
-}
-/* 移动端底部安全区适配 */
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
 }
 </style>
 </head>
@@ -112,31 +89,32 @@
 
 <!-- 欢迎页 -->
 <div id="welcomePage" class="fixed inset-0 flex flex-col items-center justify-center z-20 px-6 page-fade text-center">
-  <h1 class="text-4xl md:text-7xl font-extrabold bg-clip-text text-transparent 
-             bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 fade-in">
-    你好，我是小雅！
-  </h1>
-  <p class="mt-4 max-w-md text-slate-500 text-sm md:text-base"></p>
-  <button id="startBtn" type="button" class="fancy-btn mt-8 md:mt-10 rounded-full px-8 py-3 md:px-12 md:py-4 text-base md:text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
+<h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent 
+           bg-gradient-to-r from-blue-800 via-blue-500 to-cyan-400 fade-in">
+  你好，我是小雅！
+</h1>
+  <p class="mt-6 max-w-md text-slate-500"></p>
+  <button id="startBtn" type="button" class="fancy-btn mt-10 rounded-full px-12 py-4 text-lg font-bold text-black shadow-xl hover:scale-105 transition-transform">
     开始对话
   </button>
 </div>
 
-<!-- 聊天主界面 - 移动端优化布局 -->
-<div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10 max-w-4xl mx-auto px-2 sm:px-4 md:px-6 page-fade page-hide">
-  <!-- 头部 -->
-  <div class="py-3 md:py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-[#fcfbfc]/80 backdrop-blur-sm z-10">
+<!-- 聊天主界面 -->
+<div id="chatPage" class="fixed inset-0 hidden flex flex-col z-10 max-w-4xl mx-auto px-4 md:px-6 page-fade page-hide">
+  <div class="py-4 border-b border-slate-100 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-      <span class="text-sm font-medium text-slate-600">青山小雅</span>
+      <span class="text-sm font-medium text-slate-600">小雅空间</span>
     </div>
     <div class="flex gap-3">
-      <button id="clearHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-2 touch-manipulation" title="清除对话">
+      <!-- 清除对话按钮 -->
+      <button id="clearHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-1" title="清除对话">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       </button>
-      <button id="exportHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-2 touch-manipulation" title="导出对话记录">
+      <!-- 导出对话按钮 -->
+      <button id="exportHistoryBtn" class="text-slate-400 hover:text-slate-700 transition p-1" title="导出对话记录">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
@@ -144,18 +122,16 @@
     </div>
   </div>
 
-  <!-- 聊天记录区域 -->
-  <div id="chatLog" class="flex-1 overflow-y-auto py-4 md:py-6 space-y-4 md:space-y-6 bg-transparent"></div>
+  <div id="chatLog" class="flex-1 overflow-y-auto py-6 space-y-6 bg-transparent"></div>
   
-  <!-- 底部输入区 - 安全区适配 -->
-  <div class="pb-2 pt-2 bg-transparent safe-bottom">
-    <p id="inputHint" class="mb-1 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
+  <div class="pb-6 pt-2 bg-transparent">
+    <p id="inputHint" class="mb-2 text-center text-xs text-amber-700">发送前请先阅读并同意使用须知</p>
     
-    <div class="relative flex items-end gap-2 md:gap-3 bg-white/80 backdrop-blur-md border border-slate-200/80 rounded-2xl md:rounded-3xl p-2 shadow-sm focus-within:border-slate-300 transition-all duration-300">
-      <textarea id="messageInput" class="auto-textarea flex-1 resize-none bg-transparent pl-3 md:pl-4 pr-2 py-2 text-sm md:text-[15px] placeholder:text-slate-400 outline-none disabled:text-slate-400"
+    <div class="relative flex items-end gap-3 bg-white/80 backdrop-blur-md border border-slate-200/80 rounded-3xl p-2.5 shadow-sm focus-within:border-slate-300 focus-within:shadow-md transition-all duration-300">
+      <textarea id="messageInput" class="auto-textarea flex-1 resize-none bg-transparent pl-4 pr-2 py-2 text-[15px] placeholder:text-slate-400 outline-none disabled:text-slate-400"
         placeholder="不妨先问问小雅可以做什么" rows="1" maxlength="2000" disabled></textarea>
       
-      <button id="sendBtn" type="button" class="rounded-xl md:rounded-2xl bg-slate-900 p-2.5 md:p-3 text-white transition duration-300 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300" aria-label="发送">
+      <button id="sendBtn" type="button" class="rounded-2xl bg-slate-900 p-3 text-white transition duration-300 hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:transform-none" aria-label="发送">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 19l9-2-9-15-9 15 9 2zm0 0v-8"></path>
         </svg>
@@ -164,24 +140,24 @@
   </div>
 </div>
 
-<!-- 免责模态框 - 移动端适配 -->
-<div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 p-3 md:p-4 page-fade opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
-  <div class="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 md:p-6 shadow-2xl">
-    <h2 id="disclaimerTitle" class="text-base md:text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
-    <div class="mt-3 space-y-2 text-xs md:text-sm leading-relaxed text-slate-700">
+<!-- 免责模态框 -->
+<div id="disclaimerModal" class="fixed inset-0 z-30 hidden items-center justify-center bg-black/40 p-4 page-fade opacity-0" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle">
+  <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+    <h2 id="disclaimerTitle" class="text-lg font-bold text-slate-900">使用须知（请仔细阅读）</h2>
+    <div class="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
       <p><strong>1. 服务性质</strong>：「小雅」是 AI 驱动的自我觉察与情绪梳理工具，<strong>不能替代</strong>心理咨询师、精神科医生或其他医疗专业人员，<strong>不提供</strong>疾病诊断、心理治疗、处方或紧急干预。</p>
       <p><strong>2. 隐私与数据</strong>：您输入的内容将发送至第三方 AI 服务进行处理。请勿输入身份证号、住址、银行卡号等敏感个人信息。对话主要保存在当前浏览器中，我们无法保证绝对保密，请勿用于处理极端隐私事项。</p>
       <p><strong>3. 危机情况</strong>：若您有自伤、伤人或立即生命危险，请<strong>立刻</strong>拨打当地紧急电话（如 <strong>110</strong>、<strong>120</strong>），或心理援助热线（如全国 24 小时心理援助热线 <strong>400-161-9995</strong>，请以当地最新公布号码为准），并联系身边可信的人。本工具不能处理紧急危机。</p>
       <p><strong>4. 使用资格</strong>：继续使用即表示您已年满 18 周岁，或在监护人知情同意下使用，并理解上述限制。</p>
       <p><strong>5. 自我介绍</strong>：我是申哲（子期），如果你有任何问题或建议，这是我的微信：Shenzhetongxue</p>
     </div>
-    <label class="mt-4 flex cursor-pointer items-start gap-2 text-sm text-slate-800 select-none">
-      <input id="disclaimerCheck" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300">
-      <span class="text-xs md:text-sm">我已阅读并理解上述内容，知晓本工具的能力与限制</span>
+    <label class="mt-5 flex cursor-pointer items-start gap-3 text-sm text-slate-800 select-none">
+      <input id="disclaimerCheck" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300">
+      <span>我已阅读并理解上述内容，知晓本工具的能力与限制</span>
     </label>
     <div class="mt-5 flex gap-3">
-      <button id="disclaimerCancel" type="button" class="flex-1 rounded-xl border border-slate-200 py-2.5 md:py-3 text-slate-600 hover:bg-slate-50 text-sm">返回</button>
-      <button id="disclaimerConfirm" type="button" class="flex-1 rounded-xl bg-slate-900 py-2.5 md:py-3 font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 text-sm" disabled>同意并开始对话</button>
+      <button id="disclaimerCancel" type="button" class="flex-1 rounded-xl border border-slate-200 py-3 text-slate-600 hover:bg-slate-50">返回</button>
+      <button id="disclaimerConfirm" type="button" class="flex-1 rounded-xl bg-slate-900 py-3 font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400" disabled>同意并开始对话</button>
     </div>
   </div>
 </div>
@@ -214,7 +190,7 @@ let disclaimerAccepted = sessionStorage.getItem(DISCLAIMER_STORAGE_KEY) === '1';
 // ========== 辅助函数 ==========
 function showToast(msg, duration = 2000) {
   const toast = document.createElement('div');
-  toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm z-50 shadow-lg whitespace-nowrap max-w-[90vw] text-center';
+  toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-sm z-50 shadow-lg';
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), duration);
@@ -225,29 +201,42 @@ function getTimeString() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// 复制消息内容（触摸优化）
+// 复制消息内容
 function attachCopyHandler(bubbleElement, contentText) {
   const copyBtn = document.createElement('button');
   copyBtn.className = 'copy-btn';
   copyBtn.innerHTML = '复制';
   copyBtn.title = '复制内容';
-  // 移动端防止误触冒泡
-  copyBtn.addEventListener('click', (e) => {
+  copyBtn.onclick = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(contentText).then(() => {
-      showToast('已复制', 800);
-    }).catch(() => showToast('复制失败', 800));
-  });
+      showToast('已复制到剪贴板', 1000);
+    }).catch(() => showToast('复制失败', 1000));
+  };
   bubbleElement.appendChild(copyBtn);
+}
+
+// 为已有的消息元素添加时间戳和复制按钮 (用于助手流式消息)
+function enhanceMessage(wrapper, role, content, timestamp) {
+  // 寻找气泡元素
+  let bubble = wrapper.querySelector('.message-bubble');
+  if (!bubble) return;
+  // 时间戳
+  let timeSpan = document.createElement('div');
+  timeSpan.className = `text-xs text-slate-400 mt-1 ${role === 'user' ? 'text-right' : 'text-left'}`;
+  timeSpan.textContent = timestamp;
+  bubble.parentNode.insertBefore(timeSpan, bubble.nextSibling); // 放在气泡下方
+  // 复制按钮
+  attachCopyHandler(bubble, content);
 }
 
 // 创建完整消息 (含时间戳、复制按钮)
 function createFullMessage(role, content, timestamp = null) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'mb-4 md:mb-6 flex w-full ' + (role === 'user' ? 'justify-end' : 'justify-start');
+  wrapper.className = 'mb-6 flex w-full ' + (role === 'user' ? 'justify-end' : 'justify-start');
   
   const bubble = document.createElement('div');
-  bubble.className = `message-bubble max-w-[85%] sm:max-w-[75%] md:max-w-[80%] px-4 py-2.5 md:px-5 md:py-3.5 text-sm md:text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm relative ${
+  bubble.className = `message-bubble max-w-[80%] px-5 py-3.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap shadow-sm relative ${
     role === 'user' 
       ? 'bg-slate-900 text-white rounded-2xl rounded-tr-sm' 
       : 'bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm'
@@ -258,7 +247,7 @@ function createFullMessage(role, content, timestamp = null) {
   // 时间戳
   const timeStr = timestamp || getTimeString();
   const timeDiv = document.createElement('div');
-  timeDiv.className = `text-[10px] md:text-xs text-slate-400 mt-1 ${role === 'user' ? 'text-right' : 'text-left'} px-1`;
+  timeDiv.className = `text-xs text-slate-400 mt-1 ${role === 'user' ? 'text-right' : 'text-left'}`;
   timeDiv.textContent = timeStr;
   wrapper.appendChild(timeDiv);
   
@@ -271,9 +260,9 @@ function createFullMessage(role, content, timestamp = null) {
 // 创建打字中的临时消息 (无时间戳、无复制按钮)
 function createTypingMessage() {
   const wrapper = document.createElement('div');
-  wrapper.className = 'mb-4 md:mb-6 flex w-full justify-start';
+  wrapper.className = 'mb-6 flex w-full justify-start';
   const bubble = document.createElement('div');
-  bubble.className = 'message-bubble max-w-[85%] sm:max-w-[75%] md:max-w-[80%] px-4 py-2.5 md:px-5 md:py-3.5 text-sm md:text-[15px] bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm';
+  bubble.className = 'message-bubble max-w-[80%] px-5 py-3.5 text-[15px] leading-relaxed bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm';
   const typingSpan = document.createElement('span');
   typingSpan.className = 'animate-pulse text-slate-400 text-sm';
   typingSpan.textContent = '思考中...';
@@ -286,12 +275,13 @@ function createTypingMessage() {
 
 // 将打字消息转换为最终消息 (添加内容、时间戳、复制按钮)
 function finalizeTypingMessage(wrapper, bubble, content, timestamp) {
-  bubble.innerHTML = '';
+  bubble.innerHTML = ''; // 清除原有内容
   bubble.textContent = content;
+  // 添加复制按钮
   attachCopyHandler(bubble, content);
-  // 时间戳
+  // 添加时间戳
   const timeDiv = document.createElement('div');
-  timeDiv.className = 'text-[10px] md:text-xs text-slate-400 mt-1 text-left px-1';
+  timeDiv.className = 'text-xs text-slate-400 mt-1 text-left';
   timeDiv.textContent = timestamp;
   wrapper.appendChild(timeDiv);
 }
@@ -300,10 +290,10 @@ function scrollToBottom() {
   if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-// 自动调整 textarea 高度（移动端也适用）
+// 自动调整 textarea 高度
 function autoResizeTextarea() {
   messageInput.style.height = 'auto';
-  const newHeight = Math.min(messageInput.scrollHeight, 160); // 移动端最大160px
+  const newHeight = Math.min(messageInput.scrollHeight, 200); // 最大200px
   messageInput.style.height = newHeight + 'px';
 }
 
@@ -318,7 +308,7 @@ function clearHistory() {
 
 function exportHistory() {
   if (chatHistory.length === 0) {
-    showToast('暂无对话记录', 1000);
+    showToast('暂无对话记录可导出', 1000);
     return;
   }
   let exportText = `小雅对话记录 - ${new Date().toLocaleString()}\n\n`;
@@ -369,8 +359,6 @@ function acceptDisclaimer() {
   hideDisclaimerModal();
   setInputEnabled(true);
   messageInput.focus();
-  // 移动端键盘弹出时滚动到底部
-  setTimeout(scrollToBottom, 300);
 }
 
 function ensureDisclaimerBeforeSend() {
@@ -415,7 +403,7 @@ async function sendMessage() {
   const message = messageInput.value.trim();
   if (!message) return;
 
-  // 记录用户消息
+  // 记录用户消息 (带时间戳)
   const userTimestamp = getTimeString();
   const { wrapper: userWrapper, timeStr: userTime } = createFullMessage('user', message, userTimestamp);
   chatLog.appendChild(userWrapper);
@@ -425,11 +413,12 @@ async function sendMessage() {
   chatHistory.push({ role: 'user', content: message, timestamp: userTime });
   
   messageInput.value = '';
-  autoResizeTextarea();
+  autoResizeTextarea(); // 重置高度
 
   isStreaming = true;
   sendBtn.disabled = true;
   
+  // 创建助手打字占位
   const { wrapper: assistantWrapper, bubble: assistantBubble } = createTypingMessage();
 
   try {
@@ -459,7 +448,7 @@ async function sendMessage() {
         showDisclaimerModal();
       }
       assistantBubble.textContent = err;
-      conversation.pop();
+      conversation.pop(); // 移除未成功的助手回复
       return;
     }
 
@@ -483,6 +472,7 @@ async function sendMessage() {
       return;
     }
     
+    // 最终确定消息：添加时间戳和复制按钮
     const assistantTimestamp = getTimeString();
     finalizeTypingMessage(assistantWrapper, assistantBubble, finalText, assistantTimestamp);
     conversation.push({ role: 'assistant', content: finalText });
@@ -530,16 +520,11 @@ messageInput.addEventListener('keydown', (e) => {
     sendMessage();
   }
 });
+// 自动增高
 messageInput.addEventListener('input', autoResizeTextarea);
 
 clearHistoryBtn.addEventListener('click', clearHistory);
 exportHistoryBtn.addEventListener('click', exportHistory);
-
-// 移动端处理: 点击发送时收起键盘 (防止键盘遮挡)
-sendBtn.addEventListener('touchstart', (e) => {
-  if (messageInput.disabled) return;
-  // 短暂延迟让键盘收起，但不需要额外处理，由浏览器自动管理
-});
 </script>
 </body>
 </html>
