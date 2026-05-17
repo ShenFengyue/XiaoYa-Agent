@@ -9,6 +9,34 @@ from typing import Optional
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
+
+
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore
+# 临时凭证文件，从 Vercel 环境变量读取
+cred_json = os.environ.get("FIREBASE_CRED")
+with open("/tmp/firebase_key.json", "w") as f:
+    f.write(cred_json)
+
+# 初始化 Firebase，只做一次
+if not firebase_admin._apps:
+    cred = credentials.Certificate("/tmp/firebase_key.json")
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
+# 保存聊天记录函数
+def save_chat(user_id, message):
+    db.collection("chat_logs").add({
+        "user_id": user_id,
+        "message": message,
+        "timestamp": firestore.SERVER_TIMESTAMP
+    })
+
+
+
+
 BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
 logger = logging.getLogger(__name__)
@@ -218,6 +246,15 @@ def process_messages():
     messages = normalize_messages(data.get("messages"))
     if not messages:
         return jsonify({"error": "请至少发送一条消息"}), 400
+
+    # ====== 在这里保存用户消息 ======
+    latest_user_message = next(
+        (m["content"] for m in reversed(messages) if m["role"] == "user"),
+        ""
+    )
+    user_id = data.get("user_id", "unknown")
+    save_chat(user_id, latest_user_message)
+    # ====== 保存完毕 ======
 
     chat_messages = build_messages(messages)
     use_streaming = should_stream_response(data)
